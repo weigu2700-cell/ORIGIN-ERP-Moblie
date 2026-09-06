@@ -1,0 +1,28 @@
+- generic [ref=e54]:
+  - generic [ref=e58]:
+    - generic [ref=e59]: 原点智造
+    - generic [ref=e60]: 移动 ERP · PDA
+  - generic [ref=e61]:
+    - generic [ref=e63]: 欢迎登录
+    - generic [ref=e64]: 使用企业 ERP 账号进入移动工作台
+  - generic [ref=e65]:
+    - generic [ref=e66]:
+      - generic [ref=e67]: 账号
+      - generic "账号" [ref=e68]:
+        - generic [ref=e70]:
+          - generic [ref=e71]: 
+          - generic [ref=e74]:
+            - generic: 请输入账号
+            - textbox [ref=e75]
+    - generic [ref=e76]:
+      - generic [ref=e77]: 密码
+      - generic "密码" [ref=e78]:
+        - generic [ref=e80]:
+          - generic [ref=e81]: 
+          - generic [ref=e84]:
+            - generic: 请输入密码
+            - textbox [ref=e85]
+          - generic [ref=e86]: 
+    - generic "登录并进入移动工作台" [ref=e88] [cursor=pointer]: 登录
+    - generic [ref=e91]: 无法登录？请联系系统管理员
+  - generic [ref=e92]: ORIGIN MANUFACTURING · MOBILE
