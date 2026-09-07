@@ -1,0 +1,1 @@
+"use strict";const e=require("../common/vendor.js"),n=require("../constants/storage.js");exports.getToken=function(){return e.index.getStorageSync(n.STORAGE_KEYS.token)||""},exports.removeToken=function(){e.index.removeStorageSync(n.STORAGE_KEYS.token)},exports.setToken=function(o){e.index.setStorageSync(n.STORAGE_KEYS.token,o)};

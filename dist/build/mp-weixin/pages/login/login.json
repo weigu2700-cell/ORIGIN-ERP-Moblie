@@ -1,0 +1,9 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "wd-input": "../../node-modules/wot-design-uni/components/wd-input/wd-input",
+    "wd-notice-bar": "../../node-modules/wot-design-uni/components/wd-notice-bar/wd-notice-bar",
+    "wd-button": "../../node-modules/wot-design-uni/components/wd-button/wd-button",
+    "wd-config-provider": "../../node-modules/wot-design-uni/components/wd-config-provider/wd-config-provider"
+  }
+}

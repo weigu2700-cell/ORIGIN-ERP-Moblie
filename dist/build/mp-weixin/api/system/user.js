@@ -1,0 +1,1 @@
+"use strict";const r=require("../../utils/request.js");exports.getCurrentUser=function(){return r.get("/system/user/current",void 0,{showError:!1})},exports.getCurrentUserPermissions=function(){return r.get("/system/permission",void 0,{showError:!1})};

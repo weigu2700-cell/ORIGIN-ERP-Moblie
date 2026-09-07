@@ -1,0 +1,13 @@
+{
+  "navigationStyle": "custom",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "wd-icon": "../../node-modules/wot-design-uni/components/wd-icon/wd-icon",
+    "wd-skeleton": "../../node-modules/wot-design-uni/components/wd-skeleton/wd-skeleton",
+    "wd-grid-item": "../../node-modules/wot-design-uni/components/wd-grid-item/wd-grid-item",
+    "wd-grid": "../../node-modules/wot-design-uni/components/wd-grid/wd-grid",
+    "wd-action-sheet": "../../node-modules/wot-design-uni/components/wd-action-sheet/wd-action-sheet",
+    "wd-config-provider": "../../node-modules/wot-design-uni/components/wd-config-provider/wd-config-provider"
+  }
+}

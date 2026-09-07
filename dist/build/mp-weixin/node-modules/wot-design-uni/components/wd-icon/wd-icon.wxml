@@ -1,0 +1,1 @@
+<view bindtap="{{c}}" class="{{['data-v-bef80b7c', d]}}" style="{{e}}"><image wx:if="{{a}}" class="wd-icon__image data-v-bef80b7c" src="{{b}}"></image></view>

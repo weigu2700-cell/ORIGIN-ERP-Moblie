@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "我的",
+  "usingComponents": {
+    "wd-cell": "../../node-modules/wot-design-uni/components/wd-cell/wd-cell",
+    "wd-cell-group": "../../node-modules/wot-design-uni/components/wd-cell-group/wd-cell-group",
+    "wd-button": "../../node-modules/wot-design-uni/components/wd-button/wd-button"
+  }
+}

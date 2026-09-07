@@ -1,0 +1,1 @@
+<view class="{{['data-v-019b04f1', 'wd-badge', f]}}" style="{{g}}"><slot></slot><view wx:if="{{a}}" class="{{['data-v-019b04f1', 'wd-badge__content', 'is-fixed', c, d]}}" style="{{e}}">{{b}}</view></view>
