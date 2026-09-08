@@ -6,7 +6,6 @@ import { useWorkbenchStore } from "@/stores/workbench";
 import type { InventoryQuery, InventoryVo } from "@/types/inventory/inventory";
 
 const PAGE_SIZE = 20;
-
 const workbenchStore = useWorkbenchStore();
 const keyword = ref("");
 const list = ref<InventoryVo[]>([]);

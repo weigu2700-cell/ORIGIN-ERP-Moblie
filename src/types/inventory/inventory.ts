@@ -6,12 +6,12 @@ export interface InventoryVo {
     warehouseId: number,
     warehouseName: string,
     onHand: number,
-    reserve: number,
+    reserved: number,
     available: number
 }
 
 export interface PageInventoryVo {
-    record :InventoryVo[]
+    records :InventoryVo[]
     total: number,
     size: number,
     current: number,
