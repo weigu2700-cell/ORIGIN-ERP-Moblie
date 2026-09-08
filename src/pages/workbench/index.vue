@@ -65,7 +65,6 @@ const summaryItems = computed<SummaryItem[]>(() => [
 const todoItems = computed(() => summaryItems.value.filter((item) => (item.value || 0) > 0));
 const warehouseActions = computed(() => workbenchStore.warehouses.map((warehouse) => ({
   name: warehouse.name,
-  subname: warehouse.code,
 })));
 
 async function loadWorkbench() {
@@ -144,7 +143,7 @@ onPullDownRefresh(async () => {
       <view class="top-panel">
         <view class="top-line">
           <view>
-            <text class="eyebrow">SMARTERP · WORKBENCH</text>
+            <text class="eyebrow">ORIGINERP · WORKBENCH</text>
             <text class="greeting">{{ greeting }}，{{ userStore.displayName }}</text>
             <text class="user-meta">{{ userMeta }}</text>
           </view>
