@@ -36,9 +36,9 @@ async function loadPage(target: number) {
   loading.value = true;
   try {
     const result = await getPageInventory(buildQuery(target));
-    const records = result?.record || [];
+    const records = result?.records || [];
     list.value = target === 1 ? records : list.value.concat(records);
-    total.value = result?.total || 0;
+    total.value = Number(result?.total) || 0;
     page.value = target;
   } catch {
     if (target === 1) {
@@ -161,7 +161,7 @@ onReachBottom(() => {
           </view>
           <view class="qty-item">
             <text class="qty-label">预留</text>
-            <text class="qty-value">{{ formatQty(item.reserve) }}</text>
+            <text class="qty-value">{{ formatQty(item.reserved) }}</text>
           </view>
           <view class="qty-item">
             <text class="qty-label">可用</text>
