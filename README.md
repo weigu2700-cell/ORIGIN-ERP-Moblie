@@ -2,6 +2,16 @@
 
 基于 uni-app、Vue 3、TypeScript、Vite，复用现有 smart-erp-server，与 Web 端共用账号、权限和业务数据。
 
+## 环境要求
+
+- **Node.js >= 18**（Vite 5 要求 Node.js 18 或更高版本）
+- 推荐使用 nvm 管理 Node.js 版本：
+
+```sh
+nvm install 18
+nvm use 18
+```
+
 ## 当前进度
 
 已完成项目初始化和第 3 步请求封装：项目标识、三端命令、环境配置、H5 开发代理、统一请求入口和启动页。
