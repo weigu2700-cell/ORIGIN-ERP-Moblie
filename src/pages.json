@@ -37,6 +37,23 @@
       "style": {
         "navigationBarTitleText": "我的"
       }
+    },
+    {
+      "path": "apps/inventory/index",
+      "style": {
+        "navigationBarTitleText": "库存查询",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark",
+        "onReachBottomDistance": 50
+      }
+    },
+    {
+      "path": "apps/inventory/components/detail",
+      "style": {
+        "navigationBarTitleText": "库存明细",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark"
+      }
     }
   ],
   "tabBar": {
