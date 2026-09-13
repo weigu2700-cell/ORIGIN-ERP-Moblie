@@ -69,6 +69,7 @@ export const FEATURE_CAPABILITIES: Record<FeatureKey, FeatureCapability> = {
     key: 'sales-order',
     title: '销售订单',
     permissions: [PERMISSIONS.salesOrderList],
-    available: false,
+    route: '/apps/sales-order/index',
+    available: true,
   },
 };
