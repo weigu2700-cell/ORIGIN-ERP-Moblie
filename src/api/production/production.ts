@@ -8,6 +8,7 @@ import type {
   PageProductionReport,
   ProductionOrder,
   ProductionOrderQuery,
+  ProductionPicking,
   ProductionPickingQuery,
   ProductionReport,
   ProductionReportQuery,
@@ -54,6 +55,10 @@ export function approveProductionPicking(id: string) {
 
 export function confirmProductionPicking(id: string) {
   return post<void>('/prd/picking/confirm', undefined, { query: { id } });
+}
+
+export function getDetailProductionPicking(id: string) {
+  return get<ProductionPicking>(`/prd/picking/${id}`);
 }
 
 export function getPageProductionReport(data: ProductionReportQuery) {

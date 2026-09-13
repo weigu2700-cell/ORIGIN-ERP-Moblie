@@ -41,7 +41,8 @@ export const FEATURE_CAPABILITIES: Record<FeatureKey, FeatureCapability> = {
     key: 'production-picking',
     title: '生产领料',
     permissions: [PERMISSIONS.productionPickingList],
-    available: false,
+    route: '/apps/production-picking/index',
+    available: true,
   },
   'production-inbound': {
     key: 'production-inbound',
