@@ -107,6 +107,23 @@
       }
     },
     {
+      "path": "apps/production-order/index",
+      "style": {
+        "navigationBarTitleText": "生产订单",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark",
+        "onReachBottomDistance": 50
+      }
+    },
+    {
+      "path": "apps/production-order/components/detail",
+      "style": {
+        "navigationBarTitleText": "生产订单详情",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark"
+      }
+    },
+    {
       "path": "apps/sales-outbound/index",
       "style": {
         "navigationBarTitleText": "销售出库",
