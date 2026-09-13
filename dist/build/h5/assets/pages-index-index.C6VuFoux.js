@@ -1,0 +1,1 @@
+import{d as s,p as a,z as e,b as n,o,i as r}from"./index-DW5jg1B9.js";const t=s({__name:"index",setup:s=>(a(()=>{e({url:"/pages/workbench/index"})}),(s,a)=>{const e=r;return o(),n(e)})});export{t as default};

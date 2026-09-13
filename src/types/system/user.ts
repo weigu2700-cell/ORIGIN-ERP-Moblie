@@ -1,10 +1,12 @@
+import type { EntityId } from '@/types/common/entity';
+
 export interface UserRole {
   roleName?: string;
   roleCode?: string;
 }
 
 export interface CurrentUser {
-  id: number;
+  id: EntityId;
   username: string;
   realName?: string;
   phone?: string;
@@ -13,8 +15,12 @@ export interface CurrentUser {
 }
 
 export interface Permission {
-  id: number;
+  id: EntityId;
   name: string;
   code: string;
+  parentId?: EntityId;
+  parentName?: string;
+  sort?: number;
   status?: string | number;
+  remark?: string;
 }

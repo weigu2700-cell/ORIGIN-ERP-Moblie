@@ -1,43 +1,33 @@
+import type { PageResult } from '@/types/common/pagination';
+import type { EntityId } from '@/types/common/entity';
+
 export interface InventoryVo {
-    id: string
-    materialId: string
-    materialName: string
-    materialCode: string
-    warehouseId: number,
-    warehouseName: string,
-    onHand: number,
-    reserved: number,
-    available: number
+  id: EntityId;
+  materialId: EntityId;
+  materialName: string;
+  materialCode: string;
+  warehouseId: EntityId;
+  warehouseName: string;
+  onHand: number;
+  reserved: number;
+  available: number;
 }
 
-export interface PageInventoryVo {
-    records :InventoryVo[]
-    total: number,
-    size: number,
-    current: number,
-    optimizeCountSql: string,
-    searchCount: string
-}
+export type PageInventoryVo = PageResult<InventoryVo>;
 
+/** 对应 MaterialStockPageDto。 */
 export interface InventoryQuery {
-    pageNum: number,
-    pageSize: number,
-    keyword?: string,
-    materialCode?: string,
-    materialName?: string,
-    warehouseId?: number
+  pageNum: number;
+  pageSize: number;
+  materialId?: EntityId;
+  warehouseId?: EntityId;
+  materialCode?: string;
+  /** 兼容现有搜索框；API 层会映射为后端支持的 materialCode。 */
+  keyword?: string;
 }
 
-export interface InventoryItem {
- 
-      "salesOrderItemId": 0,
-      "quantity": 1
-    
-}
-
+/** 对应 MaterialStockAddDto。 */
 export interface CreateInventory {
-    "salesOrderId": 0,
-  "deliveryDate": "2026-09-08T06:56:24.156Z",
-  "items": InventoryItem[]
-  "remark": "string"
+  materialId: EntityId;
+  warehouseId: EntityId;
 }

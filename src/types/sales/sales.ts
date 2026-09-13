@@ -1,59 +1,121 @@
+import type { PageResult } from '@/types/common/pagination';
+import type { EntityId } from '@/types/common/entity';
+
+export type SalesOrderStatus = 0 | 1 | 2 | 3;
+export type SalesDeliveryStatus = 0 | 1 | 2 | 3;
+
 export interface SalesOrderItem {
-    id: string
-    lineNo: number
-    salesOrderId: string
-    materialId: string
-    materialCode: string
-    materialName: string
-    warehouseId: string
-    warehouseName: string
-    quantity: number
-    unitPrice: number
-    amount: number
+  id: EntityId;
+  lineNo: number;
+  salesOrderId: EntityId;
+  materialId: EntityId;
+  materialCode: string;
+  materialName: string;
+  warehouseId: EntityId;
+  warehouseName: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  deliveredQuantity: number;
 }
 
 export interface SalesOrder {
-    id: string
-    orderNo: string
-    customerId: string
-    customerName: string
-    orderDate: string
-    deliveryDate: string
-    totalAmount: number
-    remark: string
-    status: string
+  id: EntityId;
+  orderNo: string;
+  customerId: EntityId;
+  customerName: string;
+  orderDate: string;
+  deliveryDate: string;
+  totalAmount: number;
+  remark: string;
+  status: SalesOrderStatus;
+  items: SalesOrderItem[];
 }
 
-export interface PageSalesOrder {
-    records: SalesOrder[]
-    total: number
-    size: number
-    current: number
-    optimizeCountSql: string
-    searchCount: string
+export type PageSalesOrder = PageResult<SalesOrder>;
+
+export interface CreateSalesOrderItem {
+  materialId: EntityId;
+  warehouseId: EntityId;
+  quantity: number;
+  unitPrice: number;
 }
 
 export interface CreateSalesOrder {
-    customerId: string
-    orderDate: string
-    deliveryDate: string
-    remark: string
+  customerId: EntityId;
+  orderDate: string;
+  deliveryDate: string;
+  remark?: string;
+  items: CreateSalesOrderItem[];
 }
 
-export interface CreateSalesOrderItem {
-    materialId: string
-    warehouseId: string
-    quantity: number
-    unitPrice: number
+export interface UpdateSalesOrderItem extends CreateSalesOrderItem {
+  id?: EntityId;
+}
+
+export interface UpdateSalesOrder {
+  orderDate?: string;
+  deliveryDate?: string;
+  remark?: string;
+  status?: SalesOrderStatus;
+  items?: UpdateSalesOrderItem[];
 }
 
 export interface SalesOrderQuery {
-
-    pageNum: number
-    pageSize: number
-    customerId?: string
-    orderNo?: string
-    orderDate?: string
-    status?: string
+  pageNum: number;
+  pageSize: number;
+  customerId?: EntityId;
+  orderNo?: string;
+  orderDate?: string;
+  status?: SalesOrderStatus;
 }
 
+export interface SalesDeliveryItem {
+  id: EntityId;
+  deliveryId: EntityId;
+  lineNo: number;
+  salesOrderItemId: EntityId;
+  materialId: EntityId;
+  materialName: string;
+  materialCode: string;
+  warehouseId: EntityId;
+  warehouseName: string;
+  quantity: number;
+  reservedQuantity: number;
+}
+
+export interface SalesDelivery {
+  id: EntityId;
+  deliveryNo: string;
+  salesOrderId: EntityId;
+  salesOrderNo: string;
+  customerId: EntityId;
+  customerName: string;
+  deliveryDate: string;
+  status: SalesDeliveryStatus;
+  items: SalesDeliveryItem[];
+  remark: string;
+}
+
+export type PageSalesDelivery = PageResult<SalesDelivery>;
+
+export interface SalesDeliveryQuery {
+  pageNum: number;
+  pageSize: number;
+  deliveryNo?: string;
+  salesOrderId?: EntityId;
+  customerId?: EntityId;
+  status?: SalesDeliveryStatus;
+}
+
+export interface CreateSalesDeliveryItem {
+  salesOrderItemId: EntityId;
+  quantity: number;
+}
+
+export interface CreateSalesDelivery {
+  salesOrderId: EntityId;
+  deliveryDate: string;
+  items: CreateSalesDeliveryItem[];
+  remark?: string;
+}

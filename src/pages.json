@@ -57,10 +57,10 @@
     }
   ],
   "tabBar": {
-    "color": "#82919a",
+    "color": "#82939d",
     "selectedColor": "#245b78",
     "backgroundColor": "#ffffff",
-    "borderStyle": "black",
+    "borderStyle": "white",
     "list": [
       {
         "pagePath": "pages/workbench/index",
@@ -79,7 +79,7 @@
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "原点智造 ERP",
-    "navigationBarBackgroundColor": "#f5f7fb",
-    "backgroundColor": "#f5f7fb"
+    "navigationBarBackgroundColor": "#eef3f5",
+    "backgroundColor": "#eef3f5"
   }
 }

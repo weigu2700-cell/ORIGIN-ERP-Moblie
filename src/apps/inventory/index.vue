@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { onLoad, onPullDownRefresh, onReachBottom } from "@dcloudio/uni-app";
-import { getPageInventory } from "@/api/inventory/inventory";
-import { useWorkbenchStore } from "@/stores/workbench";
-import type { InventoryQuery, InventoryVo } from "@/types/inventory/inventory";
+import { computed, ref } from 'vue';
+import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
+import { getPageInventory } from '@/api/inventory/inventory';
+import { useWorkbenchStore } from '@/stores/workbench';
+import type { InventoryQuery, InventoryVo } from '@/types/inventory/inventory';
 
 const PAGE_SIZE = 20;
 const workbenchStore = useWorkbenchStore();
-const keyword = ref("");
+const keyword = ref('');
 const list = ref<InventoryVo[]>([]);
 const total = ref(0);
 const page = ref(1);
@@ -17,7 +17,7 @@ const finished = computed(() => list.value.length >= total.value);
 const isEmpty = computed(() => !loading.value && !list.value.length);
 
 function formatQty(value?: number | null) {
-  return value === null || value === undefined ? "—" : String(value);
+  return value === null || value === undefined ? '暂无' : String(value);
 }
 
 function buildQuery(target: number): InventoryQuery {
@@ -54,7 +54,7 @@ function search() {
 }
 
 function clearKeyword() {
-  keyword.value = "";
+  keyword.value = '';
   loadPage(1);
 }
 
@@ -71,16 +71,16 @@ function openDetail(item: InventoryVo) {
 
 function scanForCreate() {
   uni.scanCode({
-    scanType: ["barCode", "qrCode"],
+    scanType: ['barCode', 'qrCode'],
     success: ({ result }) => {
       // 新增流程待接入，这里先保留扫码结果。
       keyword.value = result;
-      uni.showToast({ title: `已识别：${result}`, icon: "none" });
+      uni.showToast({ title: `已识别：${result}`, icon: 'none' });
       loadPage(1);
     },
     fail: (error) => {
-      if (!/cancel/i.test(error.errMsg || "")) {
-        uni.showToast({ title: "扫码失败，请重试", icon: "none" });
+      if (!/cancel/i.test(error.errMsg || '')) {
+        uni.showToast({ title: '扫码失败，请重试', icon: 'none' });
       }
     },
   });
@@ -148,10 +148,10 @@ onReachBottom(() => {
           <text class="material-name">{{ item.materialName }}</text>
           <wd-icon name="chevron-right" size="16px" color="#9aa7af" />
         </view>
-        <text class="material-code">{{ item.materialCode || "—" }}</text>
+        <text class="material-code">{{ item.materialCode || '暂无编码' }}</text>
         <view class="warehouse-row">
           <wd-icon name="shop" size="13px" color="#71818b" />
-          <text class="warehouse-text">{{ item.warehouseName || "未指定仓库" }}</text>
+          <text class="warehouse-text">{{ item.warehouseName || '未指定仓库' }}</text>
         </view>
         <view class="qty-row">
           <view class="qty-item">
@@ -245,7 +245,7 @@ onReachBottom(() => {
 }
 
 .btn-pressed {
-  opacity: .72;
+  opacity: 0.72;
 }
 
 .list-meta {
@@ -363,7 +363,7 @@ onReachBottom(() => {
 }
 
 .card-pressed {
-  opacity: .72;
+  opacity: 0.72;
 }
 
 .list-footer {

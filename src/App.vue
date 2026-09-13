@@ -4,9 +4,13 @@ export default {};
 
 <style>
 page {
-  background: #f5f7fb;
-  color: #0f172a;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #eef3f5;
+  color: #132a38;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC', 'Segoe UI', sans-serif;
+  text-rendering: optimizeLegibility;
 }
-view { box-sizing: border-box; }
+view {
+  box-sizing: border-box;
+}
 </style>

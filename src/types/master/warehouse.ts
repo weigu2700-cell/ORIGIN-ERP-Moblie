@@ -1,11 +1,14 @@
-import type { PageResult } from "@/types/common/pagination";
+import type { PageResult } from '@/types/common/pagination';
+import type { EntityId } from '@/types/common/entity';
 
 export interface Warehouse {
-  id: number;
+  id: EntityId;
   name: string;
   code: string;
-  type?: string;
-  factoryId?: number;
+  type?: number;
+  address?: string;
+  remark?: string;
+  factoryId?: EntityId;
   factoryName?: string;
   status: number;
 }

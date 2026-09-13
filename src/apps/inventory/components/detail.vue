@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { onLoad, onPullDownRefresh } from "@dcloudio/uni-app";
-import { getDetailInventory } from "@/api/inventory/inventory";
-import type { InventoryVo } from "@/types/inventory/inventory";
+import { computed, ref } from 'vue';
+import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app';
+import { getDetailInventory } from '@/api/inventory/inventory';
+import type { InventoryVo } from '@/types/inventory/inventory';
 
 const loading = ref(false);
-const stockId = ref("");
+const stockId = ref('');
 const detail = ref<InventoryVo | null>(null);
 
 const rows = computed(() => {
@@ -13,13 +13,13 @@ const rows = computed(() => {
   if (!item) return [];
 
   return [
-    { label: "库存 ID", value: item.id || "—" },
-    { label: "物料 ID", value: item.materialId || "—" },
-    { label: "物料编码", value: item.materialCode || "—" },
-    { label: "所属仓库", value: item.warehouseName || "—" },
-    { label: "在库数量", value: String(item.onHand ?? "—"), primary: false },
-    { label: "预留数量", value: String(item.reserve ?? "—"), primary: false },
-    { label: "可用数量", value: String(item.available ?? "—"), primary: true },
+    { label: '库存 ID', value: item.id || '暂无' },
+    { label: '物料 ID', value: item.materialId || '暂无' },
+    { label: '物料编码', value: item.materialCode || '暂无' },
+    { label: '所属仓库', value: item.warehouseName || '暂无' },
+    { label: '在库数量', value: String(item.onHand ?? '暂无'), primary: false },
+    { label: '预留数量', value: String(item.reserved ?? '暂无'), primary: false },
+    { label: '可用数量', value: String(item.available ?? '暂无'), primary: true },
   ];
 });
 
@@ -37,8 +37,8 @@ async function loadDetail() {
 }
 
 onLoad((query) => {
-  stockId.value = String(query?.id || "");
-  uni.setNavigationBarTitle({ title: "库存明细" });
+  stockId.value = String(query?.id || '');
+  uni.setNavigationBarTitle({ title: '库存明细' });
   loadDetail();
 });
 
@@ -60,10 +60,10 @@ onPullDownRefresh(async () => {
     <template v-else>
       <view class="hero-card">
         <text class="hero-name">{{ detail.materialName }}</text>
-        <text class="hero-code">{{ detail.materialCode || "—" }}</text>
+        <text class="hero-code">{{ detail.materialCode || '暂无编码' }}</text>
         <view class="hero-tag">
           <wd-icon name="shop" size="13px" />
-          <text class="hero-tag-text">{{ detail.warehouseName || "未指定仓库" }}</text>
+          <text class="hero-tag-text">{{ detail.warehouseName || '未指定仓库' }}</text>
         </view>
       </view>
 
@@ -131,7 +131,7 @@ onPullDownRefresh(async () => {
   gap: 6px;
   border-radius: 8px;
   color: #f4bd5c;
-  background: rgba(244, 189, 92, .12);
+  background: rgba(244, 189, 92, 0.12);
 }
 
 .hero-tag-text {

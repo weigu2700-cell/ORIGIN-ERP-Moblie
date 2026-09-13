@@ -1,7 +1,7 @@
-import { STORAGE_KEYS } from "@/constants/storage";
+import { STORAGE_KEYS } from '@/constants/storage';
 
 export function getToken(): string {
-  return uni.getStorageSync(STORAGE_KEYS.token) || "";
+  return uni.getStorageSync(STORAGE_KEYS.token) || '';
 }
 
 export function setToken(token: string) {
