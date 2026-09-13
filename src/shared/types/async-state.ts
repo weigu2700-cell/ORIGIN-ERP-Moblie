@@ -3,14 +3,7 @@
  * 文档要求：loading/empty/error/offline/forbidden/conflict/success 均有可恢复界面。
  */
 export type AsyncStatus =
-  | 'idle'
-  | 'loading'
-  | 'ready'
-  | 'empty'
-  | 'error'
-  | 'offline'
-  | 'forbidden'
-  | 'conflict';
+  'idle' | 'loading' | 'ready' | 'empty' | 'error' | 'offline' | 'forbidden' | 'conflict';
 
 export interface AsyncState<T> {
   status: AsyncStatus;

@@ -1,42 +1,48 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app';
 import { getDetailInventory } from '@/api/inventory/inventory';
 import { useSessionGuard, bindPageGuard } from '@/core/auth';
+import type { AsyncStatus } from '@/shared/types/async-state';
 import type { InventoryVo } from '@/types/inventory/inventory';
 
-const guard = useSessionGuard();
-bindPageGuard(guard);
+bindPageGuard(useSessionGuard());
 
-const loading = ref(false);
+const status = ref<AsyncStatus>('idle');
+const errorMessage = ref('');
 const stockId = ref('');
 const detail = ref<InventoryVo | null>(null);
 
-const rows = computed(() => {
-  const item = detail.value;
-  if (!item) return [];
+const fields = [
+  { key: 'id' as const, label: '库存 ID' },
+  { key: 'materialId' as const, label: '物料 ID' },
+  { key: 'materialCode' as const, label: '物料编码' },
+] as const;
 
-  return [
-    { label: '库存 ID', value: item.id || '暂无' },
-    { label: '物料 ID', value: item.materialId || '暂无' },
-    { label: '物料编码', value: item.materialCode || '暂无' },
-    { label: '所属仓库', value: item.warehouseName || '暂无' },
-    { label: '在库数量', value: String(item.onHand ?? '暂无'), primary: false },
-    { label: '预留数量', value: String(item.reserved ?? '暂无'), primary: false },
-    { label: '可用数量', value: String(item.available ?? '暂无'), primary: true },
-  ];
-});
+const qtyFields = [
+  { key: 'onHand' as const, label: '在库数量' },
+  { key: 'reserved' as const, label: '预留数量' },
+  { key: 'available' as const, label: '可用数量', primary: true },
+] as const;
+
+function formatValue(value?: string | number | null) {
+  if (value === null || value === undefined || value === '') return '--';
+  return String(value);
+}
 
 async function loadDetail() {
   if (!stockId.value) return;
 
-  loading.value = true;
+  status.value = 'loading';
+  errorMessage.value = '';
+
   try {
     detail.value = await getDetailInventory(stockId.value);
-  } catch {
+    status.value = 'ready';
+  } catch (error) {
     detail.value = null;
-  } finally {
-    loading.value = false;
+    status.value = 'error';
+    errorMessage.value = error instanceof Error ? error.message : '加载库存明细失败';
   }
 }
 
@@ -54,14 +60,26 @@ onPullDownRefresh(async () => {
 
 <template>
   <view class="detail-page">
-    <view v-if="loading && !detail" class="state">正在加载明细...</view>
+    <!-- 加载态 -->
+    <view v-if="status === 'loading' && !detail" class="state">
+      <text class="state-text">正在加载明细...</text>
+    </view>
 
-    <view v-else-if="!detail" class="state">
-      <wd-icon name="search" size="24px" color="#98a4ac" />
+    <!-- 错误态 -->
+    <view v-else-if="status === 'error'" class="state">
+      <wd-icon name="warn" size="28px" color="#c94444" />
+      <text class="state-text error-text">{{ errorMessage || '加载失败' }}</text>
+      <view class="retry-btn" hover-class="btn-pressed" @click="loadDetail">点击重试</view>
+    </view>
+
+    <!-- 无数据 -->
+    <view v-else-if="status === 'ready' && !detail" class="state">
+      <wd-icon name="search" size="28px" color="#98a4ac" />
       <text class="state-text">未找到该库存记录</text>
     </view>
 
-    <template v-else>
+    <!-- 详情内容 -->
+    <template v-else-if="detail">
       <view class="hero-card">
         <text class="hero-name">{{ detail.materialName }}</text>
         <text class="hero-code">{{ detail.materialCode || '暂无编码' }}</text>
@@ -72,9 +90,21 @@ onPullDownRefresh(async () => {
       </view>
 
       <view class="info-card">
-        <view v-for="row in rows" :key="row.label" class="info-row">
-          <text class="info-label">{{ row.label }}</text>
-          <text class="info-value" :class="{ primary: row.primary }">{{ row.value }}</text>
+        <view v-for="field in fields" :key="field.key" class="info-row">
+          <text class="info-label">{{ field.label }}</text>
+          <text class="info-value">{{ formatValue(detail[field.key]) }}</text>
+        </view>
+      </view>
+
+      <view class="qty-card">
+        <text class="section-title">库存数量</text>
+        <view class="qty-grid">
+          <view v-for="item in qtyFields" :key="item.key" class="qty-cell">
+            <text class="qty-cell-label">{{ item.label }}</text>
+            <text class="qty-cell-value" :class="{ primary: item.primary }">
+              {{ formatValue(detail[item.key]) }}
+            </text>
+          </view>
         </view>
       </view>
     </template>
@@ -91,19 +121,32 @@ onPullDownRefresh(async () => {
 }
 
 .state {
-  min-height: 220px;
+  min-height: 260px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  color: #6f7f89;
-  font-size: 14px;
 }
 
 .state-text {
   color: #6f7f89;
   font-size: 14px;
+  text-align: center;
+  padding: 0 16px;
+}
+
+.error-text {
+  color: #c94444;
+}
+
+.retry-btn {
+  margin-top: 6px;
+  padding: 8px 24px;
+  color: #fff;
+  font-size: 14px;
+  background: #245b78;
+  border-radius: 8px;
 }
 
 .hero-card {
@@ -175,7 +218,50 @@ onPullDownRefresh(async () => {
   font-weight: 550;
 }
 
-.info-value.primary {
+.qty-card {
+  margin-top: 14px;
+  padding: 16px 14px;
+  border: 1px solid #e1e8ec;
+  border-radius: 12px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.section-title {
+  color: #6f7f89;
+  font-size: 12px;
+  font-weight: 550;
+}
+
+.qty-grid {
+  margin-top: 14px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.qty-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qty-cell-label {
+  color: #6f7f89;
+  font-size: 12px;
+}
+
+.qty-cell-value {
+  color: #162631;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.qty-cell-value.primary {
   color: #245b78;
+}
+
+.btn-pressed {
+  opacity: 0.72;
 }
 </style>

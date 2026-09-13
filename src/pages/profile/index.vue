@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useSessionGuard, bindPageGuard } from '@/core/auth';
+import { onShow } from '@dcloudio/uni-app';
 
 const userStore = useUserStore();
 const guard = useSessionGuard();
@@ -37,7 +38,9 @@ onShow(() => {
 
 <template>
   <view class="profile-page">
-    <view v-if="guard.guardStatus.value === 'loading' && !userStore.profile" class="profile-state">正在加载账号信息...</view>
+    <view v-if="guard.guardStatus.value === 'loading' && !userStore.profile" class="profile-state"
+      >正在加载账号信息...</view
+    >
     <view v-else-if="errorMessage && !userStore.profile" class="profile-state profile-state-error">
       <text>{{ errorMessage }}</text>
       <wd-button size="small" plain aria-label="重新加载账号信息" @click="loadProfile"

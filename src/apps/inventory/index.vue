@@ -1,71 +1,45 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { getPageInventory } from '@/api/inventory/inventory';
 import { useWorkbenchStore } from '@/stores/workbench';
 import { useSessionGuard, bindPageGuard } from '@/core/auth';
+import { useListState } from '@/shared/composables/useListState';
 import type { InventoryQuery, InventoryVo } from '@/types/inventory/inventory';
 
-const guard = useSessionGuard();
-const { guardStatus } = guard;
-bindPageGuard(guard);
+bindPageGuard(useSessionGuard());
 
-const PAGE_SIZE = 20;
 const workbenchStore = useWorkbenchStore();
 const keyword = ref('');
-const list = ref<InventoryVo[]>([]);
-const total = ref(0);
-const page = ref(1);
-const loading = ref(false);
-
-const finished = computed(() => list.value.length >= total.value);
-const isEmpty = computed(() => !loading.value && !list.value.length);
-
-function formatQty(value?: number | null) {
-  return value === null || value === undefined ? '暂无' : String(value);
-}
 
 function buildQuery(target: number): InventoryQuery {
   return {
     pageNum: target,
-    pageSize: PAGE_SIZE,
+    pageSize: 20,
     keyword: keyword.value.trim() || undefined,
     warehouseId: workbenchStore.currentWarehouse?.id,
   };
 }
 
-async function loadPage(target: number) {
-  if (loading.value) return;
+const listState = useListState<InventoryVo>({
+  pageSize: 20,
+  fetchPage: async (pageNum, _pSize) => {
+    const result = await getPageInventory(buildQuery(pageNum));
+    return { records: result?.records || [], total: Number(result?.total) || 0 };
+  },
+});
 
-  loading.value = true;
-  try {
-    const result = await getPageInventory(buildQuery(target));
-    const records = result?.records || [];
-    list.value = target === 1 ? records : list.value.concat(records);
-    total.value = Number(result?.total) || 0;
-    page.value = target;
-  } catch {
-    if (target === 1) {
-      list.value = [];
-      total.value = 0;
-    }
-  } finally {
-    loading.value = false;
-  }
+function formatQty(value?: number | null) {
+  return value === null || value === undefined ? '--' : String(value);
 }
 
 function search() {
-  loadPage(1);
+  listState.refresh();
 }
 
 function clearKeyword() {
   keyword.value = '';
-  loadPage(1);
-}
-
-function loadMore() {
-  if (loading.value || finished.value) return;
-  loadPage(page.value + 1);
+  listState.refresh();
 }
 
 function openDetail(item: InventoryVo) {
@@ -74,14 +48,13 @@ function openDetail(item: InventoryVo) {
   });
 }
 
-function scanForCreate() {
+function handleScan() {
   uni.scanCode({
     scanType: ['barCode', 'qrCode'],
     success: ({ result }) => {
-      // 新增流程待接入，这里先保留扫码结果。
       keyword.value = result;
       uni.showToast({ title: `已识别：${result}`, icon: 'none' });
-      loadPage(1);
+      listState.refresh();
     },
     fail: (error) => {
       if (!/cancel/i.test(error.errMsg || '')) {
@@ -91,62 +64,103 @@ function scanForCreate() {
   });
 }
 
+function handleRetry() {
+  listState.refresh();
+}
+
 onLoad(() => {
-  loadPage(1);
+  listState.loadPage(1);
 });
 
 onPullDownRefresh(async () => {
-  await loadPage(1);
+  await listState.refresh();
   uni.stopPullDownRefresh();
 });
 
 onReachBottom(() => {
-  loadMore();
+  listState.loadMore();
 });
 </script>
 
 <template>
   <view class="inventory-page">
+    <!-- 仓库上下文栏 -->
+    <view v-if="workbenchStore.currentWarehouse" class="warehouse-bar">
+      <wd-icon name="shop" size="14px" color="#245b78" />
+      <text class="warehouse-bar-text">{{ workbenchStore.currentWarehouse.name }}</text>
+    </view>
+
+    <!-- 搜索 + 扫码工具栏 -->
     <view class="toolbar">
       <view class="search-box">
         <wd-icon name="search" size="16px" color="#98a4ac" />
         <input
           v-model="keyword"
           class="search-input"
-          placeholder="搜索物料名称 / 编码"
+          placeholder="搜索物料编码"
           placeholder-class="search-placeholder"
           confirm-type="search"
           @confirm="search"
         />
-        <view v-if="keyword" class="clear-btn" @click="clearKeyword">
+        <view
+          v-if="keyword"
+          class="clear-btn"
+          role="button"
+          aria-label="清除搜索"
+          @click="clearKeyword"
+        >
           <wd-icon name="close" size="14px" color="#98a4ac" />
         </view>
       </view>
-      <view class="scan-btn" hover-class="btn-pressed" @click="scanForCreate">
+      <view
+        class="scan-btn"
+        hover-class="btn-pressed"
+        role="button"
+        aria-label="扫码搜索"
+        @click="handleScan"
+      >
         <wd-icon name="scan" size="18px" />
         <text class="scan-text">扫码</text>
       </view>
     </view>
 
+    <!-- 列表元信息 -->
     <view class="list-meta">
-      <text class="meta-total">共 {{ total }} 条库存</text>
-      <text v-if="workbenchStore.currentWarehouse" class="meta-warehouse">
-        {{ workbenchStore.currentWarehouse.name }}
+      <text class="meta-total">共 {{ listState.total.value }} 条库存</text>
+    </view>
+
+    <!-- 首次加载态 -->
+    <view v-if="listState.isInitialLoading.value" class="state">
+      <text class="state-text">正在加载库存...</text>
+    </view>
+
+    <!-- 加载失败态 -->
+    <view v-else-if="listState.status.value === 'error'" class="state">
+      <wd-icon name="warn" size="28px" color="#c94444" />
+      <text class="state-text error-text">{{ listState.errorMessage.value || '加载失败' }}</text>
+      <view class="retry-btn" hover-class="btn-pressed" @click="handleRetry">点击重试</view>
+    </view>
+
+    <!-- 空数据态 -->
+    <view v-else-if="listState.isEmpty.value" class="state">
+      <wd-icon name="search" size="28px" color="#98a4ac" />
+      <text class="state-text">
+        {{ keyword ? '没有找到匹配的库存记录' : '当前仓库暂无库存数据' }}
       </text>
+      <view v-if="keyword" class="clear-filter-btn" hover-class="btn-pressed" @click="clearKeyword">
+        清除筛选
+      </view>
     </view>
 
-    <view v-if="loading && !list.length" class="state">正在加载库存...</view>
-    <view v-else-if="isEmpty" class="state">
-      <wd-icon name="search" size="24px" color="#98a4ac" />
-      <text class="state-text">没有找到匹配的库存记录</text>
-    </view>
-
+    <!-- 列表内容 -->
     <view v-else class="list">
       <view
-        v-for="item in list"
+        v-for="item in listState.list.value"
         :key="item.id"
         class="stock-card"
         hover-class="card-pressed"
+        role="button"
+        :aria-label="`查看 ${item.materialName} 详情`"
         @click="openDetail(item)"
       >
         <view class="card-head">
@@ -175,8 +189,10 @@ onReachBottom(() => {
       </view>
 
       <view class="list-footer">
-        <text v-if="loading">加载中...</text>
-        <text v-else-if="finished">已加载全部 {{ list.length }} 条</text>
+        <text v-if="listState.loading.value">加载中...</text>
+        <text v-else-if="listState.finished.value"
+          >已加载全部 {{ listState.list.value.length }} 条</text
+        >
         <text v-else>上拉加载更多</text>
       </view>
     </view>
@@ -186,10 +202,27 @@ onReachBottom(() => {
 <style scoped>
 .inventory-page {
   min-height: 100vh;
-  padding: 12px 16px calc(env(safe-area-inset-bottom) + 20px);
+  padding: 12px 16px calc(env(safe-area-inset-bottom) + 24px);
   color: #162631;
   background: #f4f7f9;
   box-sizing: border-box;
+}
+
+.warehouse-bar {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #d6e0e6;
+  border-radius: 8px;
+  background: #eef5f8;
+}
+
+.warehouse-bar-text {
+  color: #245b78;
+  font-size: 13px;
+  font-weight: 550;
 }
 
 .toolbar {
@@ -201,8 +234,8 @@ onReachBottom(() => {
 .search-box {
   flex: 1;
   min-width: 0;
-  height: 40px;
-  padding: 0 12px;
+  height: 44px;
+  padding: 0 14px;
   display: flex;
   align-items: center;
   border: 1px solid #d6e0e6;
@@ -216,25 +249,26 @@ onReachBottom(() => {
   min-width: 0;
   margin-left: 8px;
   color: #162631;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .search-placeholder {
   color: #98a4ac;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .clear-btn {
-  width: 20px;
-  height: 20px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-right: -8px;
 }
 
 .scan-btn {
-  height: 40px;
-  padding: 0 14px;
+  height: 44px;
+  padding: 0 16px;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -246,7 +280,7 @@ onReachBottom(() => {
 }
 
 .scan-text {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .btn-pressed {
@@ -265,25 +299,42 @@ onReachBottom(() => {
   font-size: 12px;
 }
 
-.meta-warehouse {
-  color: #245b78;
-  font-size: 12px;
-}
-
 .state {
-  min-height: 220px;
+  min-height: 240px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  color: #6f7f89;
-  font-size: 14px;
 }
 
 .state-text {
   color: #6f7f89;
   font-size: 14px;
+  text-align: center;
+  padding: 0 16px;
+}
+
+.error-text {
+  color: #c94444;
+}
+
+.retry-btn {
+  margin-top: 6px;
+  padding: 8px 24px;
+  color: #fff;
+  font-size: 14px;
+  background: #245b78;
+  border-radius: 8px;
+}
+
+.clear-filter-btn {
+  margin-top: 6px;
+  padding: 8px 24px;
+  color: #245b78;
+  font-size: 14px;
+  border: 1px solid #245b78;
+  border-radius: 8px;
 }
 
 .list {

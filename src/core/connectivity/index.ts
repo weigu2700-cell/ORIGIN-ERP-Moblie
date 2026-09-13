@@ -9,8 +9,9 @@ export function useConnectivity() {
   let unsubscribe: (() => void) | null = null;
 
   async function updateStatus() {
-    online.value = (uni.getNetworkType && (await uni.getNetworkType({})).networkType !== 'none')
-      || navigator.onLine !== false;
+    online.value =
+      (uni.getNetworkType && (await uni.getNetworkType({})).networkType !== 'none') ||
+      navigator.onLine !== false;
   }
 
   function startListening() {
@@ -20,8 +21,12 @@ export function useConnectivity() {
         online.value = res.isConnected;
       });
     } else if (typeof window !== 'undefined') {
-      const onOnline = () => { online.value = true; };
-      const onOffline = () => { online.value = false; };
+      const onOnline = () => {
+        online.value = true;
+      };
+      const onOffline = () => {
+        online.value = false;
+      };
       window.addEventListener('online', onOnline);
       window.addEventListener('offline', onOffline);
       unsubscribe = () => {
