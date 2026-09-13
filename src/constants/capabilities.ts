@@ -34,7 +34,8 @@ export const FEATURE_CAPABILITIES: Record<FeatureKey, FeatureCapability> = {
     key: 'purchase-inbound',
     title: '采购入库',
     permissions: [PERMISSIONS.purchaseInboundList],
-    available: false,
+    route: '/apps/purchase-in-stock/index',
+    available: true,
   },
   'production-picking': {
     key: 'production-picking',

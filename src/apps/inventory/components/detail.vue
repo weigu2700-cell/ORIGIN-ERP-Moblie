@@ -20,11 +20,15 @@ const fields = [
   { key: 'materialCode' as const, label: '物料编码' },
 ] as const;
 
-const qtyFields = [
-  { key: 'onHand' as const, label: '在库数量' },
-  { key: 'reserved' as const, label: '预留数量' },
-  { key: 'available' as const, label: '可用数量', primary: true },
-] as const;
+const qtyFields: ReadonlyArray<{
+  key: 'onHand' | 'reserved' | 'available';
+  label: string;
+  primary?: boolean;
+}> = [
+  { key: 'onHand', label: '在库数量' },
+  { key: 'reserved', label: '预留数量' },
+  { key: 'available', label: '可用数量', primary: true },
+];
 
 function formatValue(value?: string | number | null) {
   if (value === null || value === undefined || value === '') return '--';
