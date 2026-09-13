@@ -55,7 +55,8 @@ export const FEATURE_CAPABILITIES: Record<FeatureKey, FeatureCapability> = {
     key: 'sales-outbound',
     title: '销售出库',
     permissions: [PERMISSIONS.salesDeliveryList],
-    available: false,
+    route: '/apps/sales-outbound/index',
+    available: true,
   },
   'production-order': {
     key: 'production-order',
