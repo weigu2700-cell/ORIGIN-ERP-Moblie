@@ -48,7 +48,8 @@ export const FEATURE_CAPABILITIES: Record<FeatureKey, FeatureCapability> = {
     key: 'production-inbound',
     title: '成品入库',
     permissions: [PERMISSIONS.finishedWarehousingList],
-    available: false,
+    route: '/apps/production-inbound/index',
+    available: true,
   },
   'sales-outbound': {
     key: 'sales-outbound',

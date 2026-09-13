@@ -88,6 +88,23 @@
         "enablePullDownRefresh": true,
         "backgroundTextStyle": "dark"
       }
+    },
+    {
+      "path": "apps/production-inbound/index",
+      "style": {
+        "navigationBarTitleText": "成品入库",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark",
+        "onReachBottomDistance": 50
+      }
+    },
+    {
+      "path": "apps/production-inbound/components/detail",
+      "style": {
+        "navigationBarTitleText": "成品入库详情",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark"
+      }
     }
   ],
   "tabBar": {
