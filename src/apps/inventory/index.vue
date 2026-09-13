@@ -5,6 +5,7 @@ import { getPageInventory } from '@/api/inventory/inventory';
 import { useWorkbenchStore } from '@/stores/workbench';
 import { useSessionGuard, bindPageGuard } from '@/core/auth';
 import { useListState } from '@/shared/composables/useListState';
+import OfflineBanner from '@/shared/components/OfflineBanner.vue';
 import type { InventoryQuery, InventoryVo } from '@/types/inventory/inventory';
 import type { Warehouse } from '@/types/master/warehouse';
 
@@ -109,6 +110,8 @@ onReachBottom(() => {
 
 <template>
   <view class="inventory-page">
+    <OfflineBanner />
+
     <!-- 仓库上下文栏 -->
     <view
       v-if="workbenchStore.currentWarehouse"

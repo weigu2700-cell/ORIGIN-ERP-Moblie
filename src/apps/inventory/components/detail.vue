@@ -4,6 +4,7 @@ import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app';
 import { getDetailInventory } from '@/api/inventory/inventory';
 import { useSessionGuard, bindPageGuard } from '@/core/auth';
 import type { AsyncStatus } from '@/shared/types/async-state';
+import OfflineBanner from '@/shared/components/OfflineBanner.vue';
 import type { InventoryVo } from '@/types/inventory/inventory';
 
 bindPageGuard(useSessionGuard());
@@ -60,6 +61,8 @@ onPullDownRefresh(async () => {
 
 <template>
   <view class="detail-page">
+    <OfflineBanner />
+
     <!-- 加载态 -->
     <view v-if="status === 'loading' && !detail" class="state">
       <text class="state-text">正在加载明细...</text>
