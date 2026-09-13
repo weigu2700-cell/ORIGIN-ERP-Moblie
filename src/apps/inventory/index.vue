@@ -3,7 +3,12 @@ import { computed, ref } from 'vue';
 import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { getPageInventory } from '@/api/inventory/inventory';
 import { useWorkbenchStore } from '@/stores/workbench';
+import { useSessionGuard, bindPageGuard } from '@/core/auth';
 import type { InventoryQuery, InventoryVo } from '@/types/inventory/inventory';
+
+const guard = useSessionGuard();
+const { guardStatus } = guard;
+bindPageGuard(guard);
 
 const PAGE_SIZE = 20;
 const workbenchStore = useWorkbenchStore();

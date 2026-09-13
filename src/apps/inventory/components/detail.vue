@@ -2,7 +2,11 @@
 import { computed, ref } from 'vue';
 import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app';
 import { getDetailInventory } from '@/api/inventory/inventory';
+import { useSessionGuard, bindPageGuard } from '@/core/auth';
 import type { InventoryVo } from '@/types/inventory/inventory';
+
+const guard = useSessionGuard();
+bindPageGuard(guard);
 
 const loading = ref(false);
 const stockId = ref('');

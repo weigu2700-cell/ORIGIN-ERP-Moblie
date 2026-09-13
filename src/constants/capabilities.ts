@@ -1,27 +1,7 @@
-export const PERMISSIONS = Object.freeze({
-  warehouseList: 'master:warehouse:list',
-  inventoryList: 'inventory:material-stock:list',
-  inventoryDetail: 'inventory:material-stock:get',
-  inventoryCreate: 'inventory:material-stock:create',
-  purchaseInboundList: 'purchase:in:stock:list',
-  purchaseInboundDetail: 'purchase:in:stock:detail',
-  purchaseInboundApprove: 'purchase:in:stock:approve',
-  purchaseInboundUpload: 'purchase:in:stock:upload',
-  productionPickingList: 'production:picking:list',
-  productionPickingApprove: 'production:picking:approve',
-  productionPickingConfirm: 'production:picking:confirm',
-  finishedWarehousingList: 'inv:finish-warehousing:list',
-  finishedWarehousingDetail: 'inv:finish-warehousing:get',
-  finishedWarehousingUpdate: 'inv:finish-warehousing:update',
-  salesDeliveryList: 'sales:delivery:list',
-  salesDeliveryDetail: 'sales:delivery:get',
-  salesDeliveryConfirm: 'sales:delivery:confirm',
-  salesDeliveryComplete: 'sales:delivery:complete',
-  salesDeliveryCancel: 'sales:delivery:cancel',
-  productionOrderList: 'production:order:list',
-  productionOrderDetail: 'production:order:get',
-  salesOrderList: 'sales:order:list',
-} as const);
+import { PERMISSION_CODES } from '@/core/auth/permission-registry';
+
+/** @deprecated 请改用 core/auth 中的 PERMISSION_CODES。 */
+export const PERMISSIONS = PERMISSION_CODES;
 
 export type FeatureKey =
   | 'scan'

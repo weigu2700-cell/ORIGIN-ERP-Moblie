@@ -2,6 +2,10 @@
 import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { FEATURE_CAPABILITIES, type FeatureKey } from '@/constants/capabilities';
+import { useSessionGuard, bindPageGuard } from '@/core/auth';
+
+const guard = useSessionGuard();
+bindPageGuard(guard);
 
 const title = ref('业务功能');
 const value = ref('');

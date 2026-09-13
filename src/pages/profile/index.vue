@@ -1,28 +1,20 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/stores/user';
+import { useSessionGuard, bindPageGuard } from '@/core/auth';
 
 const userStore = useUserStore();
-const loading = ref(false);
+const guard = useSessionGuard();
 const errorMessage = ref('');
 
+bindPageGuard(guard);
+
 async function loadProfile() {
-  loading.value = true;
   errorMessage.value = '';
-  userStore.restoreSession();
-  if (!userStore.hasToken) {
-    loading.value = false;
-    uni.reLaunch({ url: '/pages/login/login' });
-    return;
-  }
   try {
-    const authenticated = await userStore.validateSession(true);
-    if (!authenticated) uni.reLaunch({ url: '/pages/login/login' });
+    await userStore.validateSession(true);
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '账号信息加载失败';
-  } finally {
-    loading.value = false;
   }
 }
 
@@ -45,7 +37,7 @@ onShow(() => {
 
 <template>
   <view class="profile-page">
-    <view v-if="loading && !userStore.profile" class="profile-state">正在加载账号信息...</view>
+    <view v-if="guard.guardStatus.value === 'loading' && !userStore.profile" class="profile-state">正在加载账号信息...</view>
     <view v-else-if="errorMessage && !userStore.profile" class="profile-state profile-state-error">
       <text>{{ errorMessage }}</text>
       <wd-button size="small" plain aria-label="重新加载账号信息" @click="loadProfile"

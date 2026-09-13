@@ -1,6 +1,8 @@
 import type { PageResult } from '@/types/common/pagination';
 import type { EntityId } from '@/types/common/entity';
 
+export type WarehouseStatus = number;
+
 export interface Warehouse {
   id: EntityId;
   name: string;
