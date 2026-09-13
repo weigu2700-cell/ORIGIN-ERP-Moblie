@@ -12,7 +12,9 @@ export type AppErrorKind =
   | 'validation'
   | 'conflict'
   | 'server'
-  | 'contract';
+  | 'contract'
+  | 'notFound'
+  | 'unknown';
 
 export interface AppErrorDetails {
   kind: AppErrorKind;

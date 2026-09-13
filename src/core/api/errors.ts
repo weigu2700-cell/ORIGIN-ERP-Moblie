@@ -17,20 +17,64 @@ export interface ErrorContext {
 }
 
 export function errorContextFromAppError(error: unknown): ErrorContext {
+  return classifyError(error);
+}
+
+export function classifyError(error: unknown): ErrorContext {
   if (error && typeof error === 'object') {
     const err = error as Record<string, unknown>;
+    const statusCode =
+      typeof err.statusCode === 'number' ? err.statusCode : undefined;
+    const message = typeof err.message === 'string' ? err.message : '';
+    const kind = deriveKind(statusCode, message);
     return {
-      kind: (err.kind as AppErrorKind) || 'server',
-      message: typeof err.message === 'string' ? err.message : '未知错误',
-      code: typeof err.code === 'number' ? err.code : undefined,
-      statusCode: typeof err.statusCode === 'number' ? err.statusCode : undefined,
-      retryable: Boolean(err.retryable),
-      requestId: typeof err.requestId === 'string' ? err.requestId : undefined,
+      kind,
+      message: message || '未知错误',
+      statusCode,
+      retryable: isRetryableError(kind),
     };
   }
   return {
-    kind: 'server',
+    kind: 'unknown',
     message: '未知错误',
     retryable: false,
   };
+}
+
+function deriveKind(
+  statusCode?: number,
+  message?: string,
+): AppErrorKind {
+  if (!statusCode) {
+    if (message && /fetch|network|connect/i.test(message))
+      return 'network';
+    if (message && /timeout|timed out/i.test(message))
+      return 'timeout';
+    return 'unknown';
+  }
+  switch (statusCode) {
+    case 400:
+      return 'validation';
+    case 401:
+      return 'unauthorized';
+    case 403:
+      return 'forbidden';
+    case 404:
+      return 'notFound';
+    case 409:
+      return 'conflict';
+    case 422:
+      return 'validation';
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      return 'server';
+    default:
+      return 'unknown';
+  }
+}
+
+export function isRetryableError(kind: AppErrorKind): boolean {
+  return kind === 'network' || kind === 'timeout' || kind === 'server';
 }

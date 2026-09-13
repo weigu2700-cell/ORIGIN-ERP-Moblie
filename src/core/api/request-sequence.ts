@@ -48,3 +48,22 @@ export function useRequestSequence() {
     createAbortController,
   };
 }
+
+let seqCounter = 1;
+
+export function generateSequenceId(): number {
+  seqCounter += 1;
+  return seqCounter;
+}
+
+export function serializeQuery(
+  params: Record<string, unknown>,
+): string {
+  return Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+    )
+    .join('&');
+}

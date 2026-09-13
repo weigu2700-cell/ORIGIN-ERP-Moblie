@@ -57,3 +57,32 @@ export const PERMISSION_CODES = Object.freeze({
 } as const);
 
 export type PermissionCode = (typeof PERMISSION_CODES)[keyof typeof PERMISSION_CODES];
+
+export function hasPermission(
+  userPermissions: string[],
+  requiredPermission: string,
+): boolean {
+  if (!userPermissions || userPermissions.length === 0) return false;
+  if (userPermissions.includes('*:*')) return true;
+  return userPermissions.includes(requiredPermission);
+}
+
+export function hasAllPermissions(
+  userPermissions: string[],
+  requiredPermissions: string[],
+): boolean {
+  if (!requiredPermissions || requiredPermissions.length === 0) return true;
+  return requiredPermissions.every((perm) =>
+    hasPermission(userPermissions, perm),
+  );
+}
+
+export function hasAnyPermission(
+  userPermissions: string[],
+  requiredPermissions: string[],
+): boolean {
+  if (!requiredPermissions || requiredPermissions.length === 0) return false;
+  return requiredPermissions.some((perm) =>
+    hasPermission(userPermissions, perm),
+  );
+}
