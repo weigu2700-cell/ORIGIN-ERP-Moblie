@@ -1,16 +1,25 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { getPageInventory } from '@/api/inventory/inventory';
 import { useWorkbenchStore } from '@/stores/workbench';
 import { useSessionGuard, bindPageGuard } from '@/core/auth';
 import { useListState } from '@/shared/composables/useListState';
 import type { InventoryQuery, InventoryVo } from '@/types/inventory/inventory';
+import type { Warehouse } from '@/types/master/warehouse';
 
 bindPageGuard(useSessionGuard());
 
 const workbenchStore = useWorkbenchStore();
 const keyword = ref('');
+const warehouseSheetVisible = ref(false);
+
+const warehouseActions = computed(() =>
+  workbenchStore.warehouses.map((warehouse) => ({
+    name: warehouse.name,
+    subname: warehouse.code,
+  })),
+);
 
 function buildQuery(target: number): InventoryQuery {
   return {
@@ -68,6 +77,22 @@ function handleRetry() {
   listState.refresh();
 }
 
+function openWarehouseSheet() {
+  if (!workbenchStore.warehouses.length) {
+    uni.showToast({ title: '暂无可用仓库', icon: 'none' });
+    return;
+  }
+  if (workbenchStore.canSelectWarehouse) warehouseSheetVisible.value = true;
+}
+
+async function selectWarehouse(event: { index: number }) {
+  const warehouse = workbenchStore.warehouses[event.index] as Warehouse | undefined;
+  if (warehouse) {
+    await workbenchStore.selectWarehouse(warehouse);
+    listState.refresh();
+  }
+}
+
 onLoad(() => {
   listState.loadPage(1);
 });
@@ -85,9 +110,17 @@ onReachBottom(() => {
 <template>
   <view class="inventory-page">
     <!-- 仓库上下文栏 -->
-    <view v-if="workbenchStore.currentWarehouse" class="warehouse-bar">
+    <view
+      v-if="workbenchStore.currentWarehouse"
+      class="warehouse-bar"
+      :class="{ selectable: workbenchStore.canSelectWarehouse }"
+      :role="workbenchStore.canSelectWarehouse ? 'button' : undefined"
+      :aria-label="`当前仓库 ${workbenchStore.currentWarehouse.name}${workbenchStore.canSelectWarehouse ? '，点击切换' : ''}`"
+      @click="openWarehouseSheet"
+    >
       <wd-icon name="shop" size="14px" color="#245b78" />
       <text class="warehouse-bar-text">{{ workbenchStore.currentWarehouse.name }}</text>
+      <wd-icon v-if="workbenchStore.canSelectWarehouse" name="chevron-down" size="14px" color="#9aa7af" />
     </view>
 
     <!-- 搜索 + 扫码工具栏 -->
@@ -196,6 +229,14 @@ onReachBottom(() => {
         <text v-else>上拉加载更多</text>
       </view>
     </view>
+
+    <wd-action-sheet
+      v-model="warehouseSheetVisible"
+      title="切换仓库"
+      cancel-text="取消"
+      :actions="warehouseActions"
+      @select="selectWarehouse"
+    />
   </view>
 </template>
 
@@ -219,7 +260,12 @@ onReachBottom(() => {
   background: #eef5f8;
 }
 
+.warehouse-bar.selectable {
+  cursor: pointer;
+}
+
 .warehouse-bar-text {
+  flex: 1;
   color: #245b78;
   font-size: 13px;
   font-weight: 550;
