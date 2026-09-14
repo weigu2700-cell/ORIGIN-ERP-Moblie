@@ -33,6 +33,12 @@
       }
     },
     {
+      "path": "pages/services/index",
+      "style": {
+        "navigationBarTitleText": "服务"
+      }
+    },
+    {
       "path": "pages/profile/index",
       "style": {
         "navigationBarTitleText": "我的"
@@ -169,6 +175,12 @@
         "text": "工作台",
         "iconPath": "static/tabbar/workbench.png",
         "selectedIconPath": "static/tabbar/workbench-active.png"
+      },
+      {
+        "pagePath": "pages/services/index",
+        "text": "服务",
+        "iconPath": "static/tabbar/services.png",
+        "selectedIconPath": "static/tabbar/services-active.png"
       },
       {
         "pagePath": "pages/profile/index",

@@ -94,7 +94,8 @@ async function selectWarehouse(event: { index: number }) {
   }
 }
 
-onLoad(() => {
+onLoad((query) => {
+  keyword.value = decodeURIComponent(String(query?.keyword || ''));
   listState.loadPage(1);
 });
 
@@ -123,7 +124,12 @@ onReachBottom(() => {
     >
       <wd-icon name="shop" size="14px" color="#245b78" />
       <text class="warehouse-bar-text">{{ workbenchStore.currentWarehouse.name }}</text>
-      <wd-icon v-if="workbenchStore.canSelectWarehouse" name="chevron-down" size="14px" color="#9aa7af" />
+      <wd-icon
+        v-if="workbenchStore.canSelectWarehouse"
+        name="chevron-down"
+        size="14px"
+        color="#9aa7af"
+      />
     </view>
 
     <!-- 搜索 + 扫码工具栏 -->
