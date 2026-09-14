@@ -21,6 +21,13 @@ describe('service catalog', () => {
     });
   });
 
+  it('keeps only the local scan tool permission-free', () => {
+    const permissionFreeCodes = SERVICE_CATALOG.filter((item) => item.permissions.length === 0).map(
+      (item) => item.code,
+    );
+    expect(permissionFreeCodes).toEqual(['scan']);
+  });
+
   it('gives every available routed service a real route', () => {
     SERVICE_CATALOG.filter((item) => item.available && item.code !== 'scan').forEach((item) => {
       expect(item.route).toMatch(/^\/apps\//);

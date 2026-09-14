@@ -95,7 +95,12 @@ async function selectWarehouse(event: { index: number }) {
 }
 
 onLoad((query) => {
-  keyword.value = decodeURIComponent(String(query?.keyword || ''));
+  const requestedKeyword = String(query?.keyword || '');
+  try {
+    keyword.value = decodeURIComponent(requestedKeyword);
+  } catch {
+    keyword.value = requestedKeyword;
+  }
   listState.loadPage(1);
 });
 

@@ -119,7 +119,7 @@ onShow(() => {
   if (userStore.permissionsStatus === 'idle') refreshPermissions();
   else if (userStore.permissionsStatus === 'error') {
     permissionError.value = userStore.contextError || '权限信息加载失败，请重试';
-  }
+  } else permissionError.value = '';
 });
 </script>
 
