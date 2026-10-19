@@ -4,10 +4,8 @@ import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
 import { getPageSalesOrder } from '@/api/sales/sales';
 import { useSessionGuard, bindPageGuard } from '@/core/auth';
 import { useListState } from '@/shared/composables/useListState';
-import {
-  SALES_ORDER_STATUS,
-  SALES_ORDER_STATUS_LABEL,
-} from '@/constants/domain-enums';
+import { SALES_ORDER_STATUS, SALES_ORDER_STATUS_LABEL } from '@/constants/domain-enums';
+import { openScan, decodeScanQuery } from '@/core/scan';
 import OfflineBanner from '@/shared/components/OfflineBanner.vue';
 import type { SalesOrder, SalesOrderQuery } from '@/types/sales/sales';
 
@@ -53,11 +51,19 @@ function openDetail(item: SalesOrder) {
   });
 }
 
+function handleScan() {
+  openScan((result) => {
+    keyword.value = result;
+    listState.refresh();
+  });
+}
+
 function handleRetry() {
   listState.refresh();
 }
 
-onLoad(() => {
+onLoad((query) => {
+  keyword.value = decodeScanQuery(query?.keyword);
   listState.loadPage(1);
 });
 
@@ -95,6 +101,15 @@ onReachBottom(() => {
         >
           <wd-icon name="close" size="14px" color="#98a4ac" />
         </view>
+      </view>
+      <view
+        class="scan-btn"
+        role="button"
+        aria-label="扫码搜索"
+        hover-class="btn-pressed"
+        @click="handleScan"
+      >
+        <wd-icon name="scan" size="18px" /><text>扫码</text>
       </view>
     </view>
 
@@ -334,5 +349,17 @@ onReachBottom(() => {
   text-align: center;
   color: #98a4ac;
   font-size: 12px;
+}
+.scan-btn {
+  min-height: 44px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 10px;
+  color: #fff;
+  background: #245b78;
+  flex-shrink: 0;
+  font-size: 15px;
 }
 </style>

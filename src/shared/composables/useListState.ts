@@ -2,7 +2,7 @@
  * 通用列表状态管理 —— M1 只读闭环模板产物。
  * 封装 loading/empty/error/offline 状态与分页逻辑，后续业务列表直接复用。
  */
-import { computed, ref } from 'vue';
+import { computed, ref, shallowRef } from 'vue';
 import type { AsyncStatus } from '@/shared/types/async-state';
 
 export interface ListStateOptions<T> {
@@ -16,16 +16,19 @@ export function useListState<T>(options: ListStateOptions<T>) {
 
   const status = ref<AsyncStatus>('idle');
   const errorMessage = ref('');
-  const list = ref<T[]>([]);
+  const list = shallowRef<T[]>([]);
   const total = ref(0);
   const page = ref(1);
   const loading = ref(false);
+  let requestSequence = 0;
 
   const finished = computed(() => list.value.length >= total.value);
   const isEmpty = computed(() => status.value === 'ready' && !loading.value && !list.value.length);
   const isInitialLoading = computed(() => status.value === 'loading' && !list.value.length);
 
   function reset() {
+    requestSequence++;
+    loading.value = false;
     list.value = [];
     total.value = 0;
     page.value = 1;
@@ -33,8 +36,9 @@ export function useListState<T>(options: ListStateOptions<T>) {
     status.value = 'idle';
   }
 
-  async function loadPage(target: number) {
-    if (loading.value) return;
+  async function loadPage(target: number, replacePending = false) {
+    if (loading.value && !replacePending) return;
+    const sequence = ++requestSequence;
 
     loading.value = true;
     errorMessage.value = '';
@@ -42,12 +46,15 @@ export function useListState<T>(options: ListStateOptions<T>) {
 
     try {
       const result = await fetchPage(target, pageSize);
+      // A new scan/filter supersedes an older request, even if it finishes later.
+      if (sequence !== requestSequence) return;
       const records = result?.records || [];
       list.value = target === 1 ? records : list.value.concat(records);
       total.value = Number(result?.total) || 0;
       page.value = target;
-      status.value = list.value.length === 0 ? 'ready' : 'ready';
+      status.value = 'ready';
     } catch (error) {
+      if (sequence !== requestSequence) return;
       if (target === 1) {
         list.value = [];
         total.value = 0;
@@ -56,12 +63,12 @@ export function useListState<T>(options: ListStateOptions<T>) {
       errorMessage.value = error instanceof Error ? error.message : '数据加载失败';
       onError?.(error);
     } finally {
-      loading.value = false;
+      if (sequence === requestSequence) loading.value = false;
     }
   }
 
   async function refresh() {
-    await loadPage(1);
+    await loadPage(1, true);
   }
 
   async function loadMore() {

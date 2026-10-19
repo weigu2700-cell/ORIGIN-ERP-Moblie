@@ -3,7 +3,6 @@ import { computed, ref } from 'vue';
 import { onShow } from '@dcloudio/uni-app';
 import OfflineBanner from '@/shared/components/OfflineBanner.vue';
 import { useUserStore } from '@/stores/user';
-import { PERMISSION_CODES } from '@/core/auth/permission-registry';
 import {
   SERVICE_CATALOG,
   SERVICE_CATEGORIES,
@@ -76,35 +75,9 @@ function clearSearch() {
   keyword.value = '';
 }
 
-function scanMaterial() {
-  uni.scanCode({
-    scanType: ['barCode', 'qrCode'],
-    success: ({ result }) => {
-      if (userStore.hasAnyPermission([PERMISSION_CODES.inventoryList])) {
-        uni.navigateTo({
-          url: `/apps/inventory/index?keyword=${encodeURIComponent(result)}`,
-        });
-        return;
-      }
-      uni.navigateTo({
-        url: `/pages/feature/index?title=${encodeURIComponent('扫码结果')}&value=${encodeURIComponent(result)}`,
-      });
-    },
-    fail: (error) => {
-      if (!/cancel/i.test(error.errMsg || '')) {
-        uni.showToast({ title: '扫码失败，请重试', icon: 'none' });
-      }
-    },
-  });
-}
-
 function openService(service: ServiceCatalogItem) {
   if (!service.available) {
     uni.showToast({ title: `${service.title}正在建设中`, icon: 'none' });
-    return;
-  }
-  if (service.code === 'scan') {
-    scanMaterial();
     return;
   }
   if (service.route) uni.navigateTo({ url: service.route });

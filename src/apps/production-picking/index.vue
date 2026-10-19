@@ -6,6 +6,7 @@ import { useWorkbenchStore } from '@/stores/workbench';
 import { useSessionGuard, bindPageGuard } from '@/core/auth';
 import { useListState } from '@/shared/composables/useListState';
 import { PRODUCTION_PICKING_STATUS } from '@/constants/domain-enums';
+import { openScan, decodeScanQuery } from '@/core/scan';
 import OfflineBanner from '@/shared/components/OfflineBanner.vue';
 import type {
   ProductionPicking,
@@ -64,17 +65,9 @@ function openDetail(item: ProductionPicking) {
 }
 
 function handleScan() {
-  uni.scanCode({
-    scanType: ['barCode', 'qrCode'],
-    success: ({ result }) => {
-      keyword.value = result;
-      listState.refresh();
-    },
-    fail: (error) => {
-      if (!/cancel/i.test(error.errMsg || '')) {
-        uni.showToast({ title: '扫码失败，请重试', icon: 'none' });
-      }
-    },
+  openScan((result) => {
+    keyword.value = result;
+    listState.refresh();
   });
 }
 
@@ -82,7 +75,8 @@ function handleRetry() {
   listState.refresh();
 }
 
-onLoad(() => {
+onLoad((query) => {
+  keyword.value = decodeScanQuery(query?.keyword);
   listState.loadPage(1);
 });
 

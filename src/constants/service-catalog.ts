@@ -59,12 +59,13 @@ export const SERVICE_CATEGORIES = [
  * 移动端服务目录的唯一数据源。code/permission/route 属于契约数据；
  * title/description 仅用于本地展示，不进入任何 API query 或 body。
  */
-export const SERVICE_CATALOG = [
+export const SERVICE_CATALOG: readonly ServiceCatalogItem[] = [
   {
     code: 'scan',
     categoryCode: SERVICE_CATEGORY_CODES.common,
     title: '扫一扫',
-    description: '扫描物料条码并定位库存',
+    description: '扫描物料或单据编码并查询',
+    route: '/pages/scan/index',
     icon: 'scan',
     tone: 'navy',
     permissions: [],

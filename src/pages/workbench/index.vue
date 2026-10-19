@@ -150,23 +150,6 @@ function openFeature(item: Shortcut, status?: string) {
     return;
   }
 
-  if (item.key === 'scan') {
-    uni.scanCode({
-      scanType: ['barCode', 'qrCode'],
-      success: ({ result }) => {
-        uni.navigateTo({
-          url: `/pages/feature/index?title=${encodeURIComponent('扫码结果')}&value=${encodeURIComponent(result)}`,
-        });
-      },
-      fail: (error) => {
-        if (!/cancel/i.test(error.errMsg || '')) {
-          uni.showToast({ title: '扫码失败，请重试', icon: 'none' });
-        }
-      },
-    });
-    return;
-  }
-
   const params = [
     `title=${encodeURIComponent(item.title)}`,
     `feature=${encodeURIComponent(item.key)}`,

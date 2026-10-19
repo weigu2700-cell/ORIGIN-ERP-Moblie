@@ -9,6 +9,7 @@ import {
   SALES_DELIVERY_STATUS,
   SALES_DELIVERY_STATUS_LABEL,
 } from '@/constants/domain-enums';
+import { openScan, decodeScanQuery } from '@/core/scan';
 import OfflineBanner from '@/shared/components/OfflineBanner.vue';
 import type { SalesDelivery, SalesDeliveryQuery } from '@/types/sales/sales';
 
@@ -56,17 +57,9 @@ function openDetail(item: SalesDelivery) {
 }
 
 function handleScan() {
-  uni.scanCode({
-    scanType: ['barCode', 'qrCode'],
-    success: ({ result }) => {
-      keyword.value = result;
-      listState.refresh();
-    },
-    fail: (error) => {
-      if (!/cancel/i.test(error.errMsg || '')) {
-        uni.showToast({ title: '扫码失败，请重试', icon: 'none' });
-      }
-    },
+  openScan((result) => {
+    keyword.value = result;
+    listState.refresh();
   });
 }
 
@@ -74,7 +67,8 @@ function handleRetry() {
   listState.refresh();
 }
 
-onLoad(() => {
+onLoad((query) => {
+  keyword.value = decodeScanQuery(query?.keyword);
   listState.loadPage(1);
 });
 

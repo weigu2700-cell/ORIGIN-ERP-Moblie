@@ -68,7 +68,7 @@ describe('useListState', () => {
       .mockResolvedValueOnce({ records: [{ id: '1' }], total: 3 })
       .mockResolvedValueOnce({ records: [{ id: '2' }, { id: '3' }], total: 3 })
 
-    const state = useListState({ pageSize: 2, fetchPage: fetch })
+    const state = useListState<{ id: string }>({ pageSize: 2, fetchPage: fetch })
     await state.loadPage(1)
     await state.loadMore()
 
@@ -126,7 +126,7 @@ describe('useListState', () => {
       .mockResolvedValueOnce({ records: [{ id: '1' }], total: 3 })
       .mockResolvedValueOnce({ records: [{ id: 'x' }, { id: 'y' }], total: 2 })
 
-    const state = useListState({ pageSize: 2, fetchPage: fetch })
+    const state = useListState<{ id: string }>({ pageSize: 2, fetchPage: fetch })
     await state.loadPage(1)
     await state.refresh()
 
@@ -143,3 +143,18 @@ describe('useListState', () => {
     expect(onError).toHaveBeenCalledOnce()
   })
 })
+describe('latest filter wins', () => {
+  it('lets a scan refresh replace a pending initial request', async () => {
+    let resolveOld!: (value: { records: string[]; total: number }) => void;
+    const fetchPage = vi.fn()
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveOld = resolve; }))
+      .mockResolvedValueOnce({ records: ['scanned'], total: 1 });
+    const state = useListState<string>({ fetchPage });
+    const old = state.loadPage(1);
+    await state.refresh();
+    resolveOld({ records: ['old'], total: 1 });
+    await old;
+    expect(state.list.value).toEqual(['scanned']);
+    expect(state.loading.value).toBe(false);
+  });
+});

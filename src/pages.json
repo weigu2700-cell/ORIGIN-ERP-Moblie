@@ -162,6 +162,12 @@
         "enablePullDownRefresh": true,
         "backgroundTextStyle": "dark"
       }
+    },
+    {
+      "path": "pages/scan/index",
+      "style": {
+        "navigationBarTitleText": "扫一扫"
+      }
     }
   ],
   "tabBar": {

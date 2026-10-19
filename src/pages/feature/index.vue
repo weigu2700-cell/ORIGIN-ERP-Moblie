@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { openScan, decodeScanQuery } from '@/core/scan';
 import { computed, ref } from 'vue';
 import { onLoad } from '@dcloudio/uni-app';
 import { FEATURE_CAPABILITIES, type FeatureKey } from '@/constants/capabilities';
@@ -23,17 +24,7 @@ const contextLabel = computed(() =>
 );
 
 function scanAgain() {
-  uni.scanCode({
-    scanType: ['barCode', 'qrCode'],
-    success: ({ result }) => {
-      value.value = result;
-    },
-    fail: (error) => {
-      if (!/cancel/i.test(error.errMsg || '')) {
-        uni.showToast({ title: '扫码失败，请检查相机权限后重试', icon: 'none' });
-      }
-    },
-  });
+  openScan((result) => { value.value = result; });
 }
 
 function backToWorkbench() {
@@ -43,8 +34,11 @@ function backToWorkbench() {
 onLoad((query) => {
   const requestedFeature = String(query?.feature || '') as FeatureKey;
   const capability = FEATURE_CAPABILITIES[requestedFeature];
-  title.value = capability?.title || decodeURIComponent(String(query?.title || '业务功能'));
-  value.value = decodeURIComponent(String(query?.value || ''));
+  title.value = capability?.title || decodeScanQuery(query?.title) || '业务功能';
+  value.value = decodeScanQuery(query?.value);
+  if (value.value && !requestedFeature) {
+    uni.redirectTo({ url: `/pages/scan/index?value=${encodeURIComponent(value.value)}` });
+  }
   feature.value = requestedFeature;
   warehouseId.value = String(query?.warehouseId || '');
   uni.setNavigationBarTitle({ title: title.value });

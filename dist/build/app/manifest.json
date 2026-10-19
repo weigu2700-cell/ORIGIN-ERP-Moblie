@@ -72,7 +72,7 @@
     "statusbar": {
       "immersed": "supportedDevice",
       "style": "dark",
-      "background": "#f5f7fb"
+      "background": "#eef3f5"
     },
     "uniStatistics": {
       "enable": false
@@ -100,9 +100,9 @@
     },
     "tabBar": {
       "position": "bottom",
-      "color": "#82919a",
+      "color": "#82939d",
       "selectedColor": "#245b78",
-      "borderStyle": "rgba(0,0,0,0.4)",
+      "borderStyle": "rgba(255,255,255,0.4)",
       "blurEffect": "none",
       "fontSize": "10px",
       "iconWidth": "24px",
@@ -114,6 +114,12 @@
           "text": "工作台",
           "iconPath": "/static/tabbar/workbench.png",
           "selectedIconPath": "/static/tabbar/workbench-active.png"
+        },
+        {
+          "pagePath": "pages/services/index",
+          "text": "服务",
+          "iconPath": "/static/tabbar/services.png",
+          "selectedIconPath": "/static/tabbar/services-active.png"
         },
         {
           "pagePath": "pages/profile/index",

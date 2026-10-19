@@ -5,6 +5,7 @@ import { getPageInventory } from '@/api/inventory/inventory';
 import { useWorkbenchStore } from '@/stores/workbench';
 import { useSessionGuard, bindPageGuard } from '@/core/auth';
 import { useListState } from '@/shared/composables/useListState';
+import { openScan, decodeScanQuery } from '@/core/scan';
 import OfflineBanner from '@/shared/components/OfflineBanner.vue';
 import type { InventoryQuery, InventoryVo } from '@/types/inventory/inventory';
 import type { Warehouse } from '@/types/master/warehouse';
@@ -59,18 +60,9 @@ function openDetail(item: InventoryVo) {
 }
 
 function handleScan() {
-  uni.scanCode({
-    scanType: ['barCode', 'qrCode'],
-    success: ({ result }) => {
-      keyword.value = result;
-      uni.showToast({ title: `已识别：${result}`, icon: 'none' });
-      listState.refresh();
-    },
-    fail: (error) => {
-      if (!/cancel/i.test(error.errMsg || '')) {
-        uni.showToast({ title: '扫码失败，请重试', icon: 'none' });
-      }
-    },
+  openScan((result) => {
+    keyword.value = result;
+    listState.refresh();
   });
 }
 
@@ -95,12 +87,7 @@ async function selectWarehouse(event: { index: number }) {
 }
 
 onLoad((query) => {
-  const requestedKeyword = String(query?.keyword || '');
-  try {
-    keyword.value = decodeURIComponent(requestedKeyword);
-  } catch {
-    keyword.value = requestedKeyword;
-  }
+  keyword.value = decodeScanQuery(query?.keyword);
   listState.loadPage(1);
 });
 
