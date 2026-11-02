@@ -1,27 +1,28 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app';
+import { onLoad, onShow, onPullDownRefresh } from '@dcloudio/uni-app';
 import {
   getDetailProductionOrder,
   beginProductionOrder,
   completeProductionOrder,
 } from '@/api/production/production';
-import { useSessionGuard, bindPageGuard } from '@/core/auth';
-import {
-  PRODUCTION_ORDER_STATUS,
-  PRODUCTION_ORDER_STATUS_LABEL,
-} from '@/constants/domain-enums';
+import { useSessionGuard, PERMISSION_CODES as P } from '@/core/auth';
+import { useUserStore } from '@/stores/user';
+import { confirmOperation, useWriteAction } from '@/shared/composables/useWriteAction';
+import { PRODUCTION_ORDER_STATUS, PRODUCTION_ORDER_STATUS_LABEL } from '@/constants/domain-enums';
 import OfflineBanner from '@/shared/components/OfflineBanner.vue';
 import type { AsyncStatus } from '@/shared/types/async-state';
 import type { ProductionOrder } from '@/types/production/production';
 
-bindPageGuard(useSessionGuard());
+const guard = useSessionGuard();
+const user = useUserStore();
+const write = useWriteAction();
 
 const status = ref<AsyncStatus>('idle');
 const errorMessage = ref('');
 const orderId = ref('');
 const detail = ref<ProductionOrder | null>(null);
-const acting = ref(false);
+const acting = write.busy;
 
 const progressPercent = computed(() => {
   if (!detail.value || detail.value.plannedQuantity === 0) return 0;
@@ -38,8 +39,21 @@ const statusTagClass = (s: number) => {
   return 's-draft';
 };
 
-const canBegin = () => detail.value?.status === PRODUCTION_ORDER_STATUS.RELEASED;
-const canComplete = () => detail.value?.status === PRODUCTION_ORDER_STATUS.IN_PROGRESS;
+const canBegin = () =>
+  detail.value?.status === PRODUCTION_ORDER_STATUS.RELEASED &&
+  user.hasAnyPermission([P.productionOrderStart]);
+const canComplete = () =>
+  detail.value?.status === PRODUCTION_ORDER_STATUS.IN_PROGRESS &&
+  user.hasAnyPermission([P.productionOrderComplete]);
+const canReport = () =>
+  detail.value?.status === PRODUCTION_ORDER_STATUS.IN_PROGRESS &&
+  user.hasAnyPermission([P.productionReportCreate]);
+function openReport() {
+  if (canReport() && !acting.value)
+    uni.navigateTo({
+      url: `/apps/production-report/create?orderId=${encodeURIComponent(orderId.value)}`,
+    });
+}
 
 function formatDate(val?: string | null) {
   if (!val) return '--';
@@ -47,7 +61,12 @@ function formatDate(val?: string | null) {
 }
 
 async function loadDetail() {
-  if (!orderId.value) return;
+  if (!orderId.value || !(await guard.runGuard())) return;
+  if (!user.hasAnyPermission([P.productionOrderDetail])) {
+    status.value = 'error';
+    errorMessage.value = '没有生产订单详情权限，请联系管理员';
+    return;
+  }
   status.value = 'loading';
   try {
     detail.value = await getDetailProductionOrder(orderId.value);
@@ -59,45 +78,51 @@ async function loadDetail() {
   }
 }
 
-async function handleBegin() {
-  if (!detail.value) return;
+async function transition(action: 'begin' | 'complete') {
+  const required = action === 'begin' ? P.productionOrderStart : P.productionOrderComplete;
+  const expected =
+    action === 'begin' ? PRODUCTION_ORDER_STATUS.RELEASED : PRODUCTION_ORDER_STATUS.IN_PROGRESS;
+  const label = action === 'begin' ? '开始生产' : '完成生产';
   try {
-    acting.value = true;
-    await beginProductionOrder(orderId.value);
-    uni.showToast({ title: '已开始生产', icon: 'success' });
-    await loadDetail();
-  } catch (error) {
-    uni.showToast({
-      title: error instanceof Error ? error.message : '操作失败',
-      icon: 'none',
+    const done = await write.run({
+      allowed: () =>
+        user.isLoggedIn &&
+        user.hasAnyPermission([required]) &&
+        user.hasAnyPermission([P.productionOrderDetail]),
+      prepare: async () => {
+        if (
+          !(await confirmOperation(
+            label,
+            action === 'begin'
+              ? '确认已完成所需领料并开始生产？'
+              : '此操作会将生产订单标为完成，不会增加库存。如需成品入库，请先完成报工和入库。',
+          ))
+        )
+          return false;
+        detail.value = await getDetailProductionOrder(orderId.value);
+        if (detail.value.status !== expected) throw new Error('订单状态已变化，请核对最新状态');
+      },
+      execute: () =>
+        action === 'begin'
+          ? beginProductionOrder(orderId.value)
+          : completeProductionOrder(orderId.value),
     });
-  } finally {
-    acting.value = false;
+    if (done) {
+      uni.showToast({ title: `${label}成功`, icon: 'success' });
+      await loadDetail();
+    }
+  } catch (error) {
+    uni.showToast({ title: error instanceof Error ? error.message : '操作失败', icon: 'none' });
   }
 }
-
-async function handleComplete() {
-  if (!detail.value) return;
-  try {
-    acting.value = true;
-    await completeProductionOrder(orderId.value);
-    uni.showToast({ title: '生产已完成', icon: 'success' });
-    await loadDetail();
-  } catch (error) {
-    uni.showToast({
-      title: error instanceof Error ? error.message : '操作失败',
-      icon: 'none',
-    });
-  } finally {
-    acting.value = false;
-  }
-}
+const handleBegin = () => transition('begin');
+const handleComplete = () => transition('complete');
 
 onLoad((query) => {
   orderId.value = String(query?.id || '');
   uni.setNavigationBarTitle({ title: '生产订单详情' });
-  loadDetail();
 });
+onShow(() => void loadDetail());
 
 onPullDownRefresh(async () => {
   await loadDetail();
@@ -189,25 +214,33 @@ onPullDownRefresh(async () => {
         </view>
       </view>
 
-      <view v-if="canBegin() || canComplete()" class="action-bar">
-        <view
+      <view v-if="canBegin() || canComplete() || canReport()" class="action-bar">
+        <button role="button"
+          v-if="canReport()"
+          class="action-btn begin-btn"
+          :disabled="acting"
+          @click="openReport"
+        >
+          登记报工
+        </button>
+        <button role="button"
           v-if="canBegin()"
           class="action-btn begin-btn"
-          :class="{ disabled: acting }"
-          hover-class="btn-pressed"
+          :disabled="acting"
+          :loading="acting"
           @click="handleBegin"
         >
-          {{ acting ? '处理中...' : '开始生产' }}
-        </view>
-        <view
+          开始生产
+        </button>
+        <button role="button"
           v-if="canComplete()"
           class="action-btn complete-btn"
-          :class="{ disabled: acting }"
-          hover-class="btn-pressed"
+          :disabled="acting"
+          :loading="acting"
           @click="handleComplete"
         >
-          {{ acting ? '处理中...' : '完成生产' }}
-        </view>
+          完成生产
+        </button>
       </view>
     </template>
   </view>
@@ -441,5 +474,13 @@ onPullDownRefresh(async () => {
 
 .btn-pressed {
   opacity: 0.72;
+}
+.action-bar {
+  flex-wrap: wrap;
+}
+.action-btn {
+  min-height: 48px;
+  flex: 1 1 140px;
+  font-size: 16px;
 }
 </style>

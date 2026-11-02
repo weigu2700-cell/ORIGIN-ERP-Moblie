@@ -184,7 +184,8 @@ export const SERVICE_CATALOG: readonly ServiceCatalogItem[] = [
     icon: 'edit',
     tone: 'violet',
     permissions: [PERMISSION_CODES.productionReportList],
-    available: false,
+    available: true,
+    route: '/apps/production-report/index',
   },
   {
     code: 'sales-order',

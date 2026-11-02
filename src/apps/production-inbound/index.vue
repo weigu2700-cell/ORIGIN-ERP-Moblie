@@ -1,389 +1,108 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { onLoad, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app';
-import { getPageProductionReport } from '@/api/production/production';
-import { useWorkbenchStore } from '@/stores/workbench';
-import { useSessionGuard, bindPageGuard } from '@/core/auth';
-import { useListState } from '@/shared/composables/useListState';
-import {
-  PRODUCTION_REPORT_STATUS,
-  PRODUCTION_REPORT_STATUS_LABEL,
-} from '@/constants/domain-enums';
 import OfflineBanner from '@/shared/components/OfflineBanner.vue';
-import type {
-  ProductionReport,
-  ProductionReportQuery,
-} from '@/types/production/production';
-
-bindPageGuard(useSessionGuard());
-
-const workbenchStore = useWorkbenchStore();
-const keyword = ref('');
-
-const statusClass = (s: number) => {
-  if (s === PRODUCTION_REPORT_STATUS.APPROVED) return 'tag-approved';
-  if (s === PRODUCTION_REPORT_STATUS.FINISHED) return 'tag-finished';
-  return 'tag-draft';
-};
-
-function buildQuery(target: number): ProductionReportQuery {
-  return {
-    pageNum: target,
-    pageSize: 20,
-    productionOrderId: keyword.value.trim() || undefined,
-    status: PRODUCTION_REPORT_STATUS.APPROVED,
-  };
+import { useProductionDocumentList } from '@/shared/composables/useProductionDocuments';
+import { PERMISSION_CODES as P } from '@/core/auth';
+const {
+  flow,
+  user,
+  warehouse,
+  guard,
+  keyword,
+  selectedStatus,
+  canRead,
+  state,
+  refresh,
+  open,
+  filter,
+} = useProductionDocumentList('inbound');
+function create() {
+  uni.navigateTo({ url: '/apps/production-report/create' });
 }
-
-const listState = useListState<ProductionReport>({
-  pageSize: 20,
-  fetchPage: async (pageNum) => {
-    const result = await getPageProductionReport(buildQuery(pageNum));
-    return { records: result?.records || [], total: Number(result?.total) || 0 };
-  },
-});
-
-function search() {
-  listState.refresh();
-}
-
-function clearKeyword() {
-  keyword.value = '';
-  listState.refresh();
-}
-
-function openDetail(item: ProductionReport) {
-  uni.navigateTo({
-    url: `/apps/production-inbound/components/detail?id=${encodeURIComponent(item.id)}`,
-  });
-}
-
-function handleRetry() {
-  listState.refresh();
-}
-
-onLoad(() => {
-  listState.loadPage(1);
-});
-
-onPullDownRefresh(async () => {
-  await listState.refresh();
-  uni.stopPullDownRefresh();
-});
-
-onReachBottom(() => {
-  listState.loadMore();
-});
 </script>
-
 <template>
-  <view class="page">
+  <view class="production-page">
     <OfflineBanner />
-
-    <view v-if="workbenchStore.currentWarehouse" class="warehouse-bar">
-      <wd-icon name="shop" size="14px" color="#245b78" />
-      <text class="warehouse-bar-text">{{ workbenchStore.currentWarehouse.name }}</text>
-    </view>
-
-    <view class="toolbar">
-      <view class="search-box">
-        <wd-icon name="search" size="16px" color="#98a4ac" />
-        <input
-          v-model="keyword"
-          class="search-input"
-          placeholder="搜索生产订单号"
-          placeholder-class="search-placeholder"
-          confirm-type="search"
-          @confirm="search"
-        />
-        <view
-          v-if="keyword"
-          class="clear-btn"
-          role="button"
-          aria-label="清除搜索"
-          @click="clearKeyword"
-        >
-          <wd-icon name="close" size="14px" color="#98a4ac" />
-        </view>
-      </view>
-    </view>
-
-    <view class="list-meta">
-      <text class="meta-total">共 {{ listState.total.value }} 条待入库</text>
-    </view>
-
-    <view v-if="listState.isInitialLoading.value" class="state">
-      <text class="state-text">正在加载待入库单据...</text>
-    </view>
-
-    <view v-else-if="listState.status.value === 'error'" class="state">
-      <wd-icon name="warn" size="28px" color="#c94444" />
-      <text class="state-text error-text">{{ listState.errorMessage.value || '加载失败' }}</text>
-      <view class="retry-btn" hover-class="btn-pressed" @click="handleRetry">点击重试</view>
-    </view>
-
-    <view v-else-if="listState.isEmpty.value" class="state">
-      <wd-icon name="check-outline" size="28px" color="#4caf50" />
-      <text class="state-text">暂无待入库的成品报工单</text>
-    </view>
-
-    <view v-else class="list">
-      <view
-        v-for="item in listState.list.value"
-        :key="item.id"
-        class="card"
-        hover-class="card-pressed"
-        role="button"
-        @click="openDetail(item)"
+    <view class="page-head"
+      ><text class="heading">{{ flow.title }}</text>
+      <button role="button"
+        v-if="flow.title === '生产报工' && user.hasAnyPermission([P.productionReportCreate])"
+        class="primary"
+        @click="create"
       >
-        <view class="card-head">
-          <text class="card-no">{{ item.productionReportNo }}</text>
-          <text class="status-tag" :class="statusClass(item.status)">
-            {{ PRODUCTION_REPORT_STATUS_LABEL[item.status] || '未知' }}
-          </text>
-        </view>
-        <text class="material-name">{{ item.materialName || '--' }}</text>
-        <text class="material-code">{{ item.materialCode || '暂无编码' }}</text>
-        <view class="order-row">
-          <text class="order-label">生产订单：</text>
-          <text class="order-value">{{ item.productionOrderNo || '--' }}</text>
-        </view>
-        <view class="bottom-row">
-          <view class="qty-line">
-            <text class="qty-text">合格 {{ item.qualifiedQuantity }}</text>
-            <text class="qty-text">报废 {{ item.scrappedQuantity }}</text>
-          </view>
-          <wd-icon name="chevron-right" size="14px" color="#9aa7af" />
-        </view>
-      </view>
-
-      <view class="list-footer">
-        <text v-if="listState.loading.value">加载中...</text>
-        <text v-else-if="listState.finished.value"
-          >已加载全部 {{ listState.list.value.length }} 条</text
-        >
-        <text v-else>上拉加载更多</text>
-      </view>
+        登记报工
+      </button>
     </view>
+    <text class="hint">{{ flow.hint }}</text>
+    <view v-if="flow.title === '成品入库' && warehouse.currentWarehouse" class="hint"
+      >当前仓库：{{ warehouse.currentWarehouse.name }}</view
+    >
+    <view v-if="guard.guardStatus.value === 'error'" class="state error"
+      >会话校验失败，请恢复网络后重试<button role="button" @click="refresh">重试</button></view
+    >
+    <view v-else-if="!canRead" class="state">没有查询权限，请联系管理员授权。</view>
+    <template v-else>
+      <view class="controls"
+        ><input
+          v-model="keyword"
+          :placeholder="flow.title === '生产报工' ? '搜索报工单号' : '搜索入库单号'"
+          aria-label="搜索单号"
+          confirm-type="search"
+          @confirm="refresh"
+        /><button role="button" class="secondary" @click="refresh">查询</button></view
+      >
+      <view class="tabs"
+        ><button role="button" :class="{ selected: selectedStatus === undefined }" @click="filter()">全部</button
+        ><button role="button"
+          v-for="(label, index) in flow.labels"
+          :key="label"
+          :class="{ selected: selectedStatus === index }"
+          @click="filter(index)"
+        >
+          {{ label }}
+        </button></view
+      >
+      <view v-if="state.isInitialLoading.value" class="state" aria-live="polite"
+        >正在加载单据…</view
+      >
+      <view v-else-if="state.status.value === 'error'" class="state error" role="alert"
+        >{{ state.errorMessage.value }}<button role="button" @click="refresh">重新加载</button></view
+      >
+      <view v-else-if="state.isEmpty.value" class="state"
+        >暂无符合条件的单据，请切换状态或查询其他单号。</view
+      >
+      <button role="button"
+        v-for="item in state.list.value"
+        :key="item.id"
+        class="doc-card"
+        :aria-label="'查看' + item.no"
+        @click="open(item)"
+      >
+        <text class="no">{{ item.no }}</text
+        ><view class="row"
+          ><text>{{ item.materialName || '--' }}</text
+          ><text>{{ flow.labels[item.status] || '未知状态' }}</text></view
+        >
+        <view class="row"
+          ><text class="label">数量 {{ item.quantity }}</text
+          ><text>{{ item.warehouseName || '仓库待核对' }}</text></view
+        ><text class="hint">{{ item.orderNo || '生产订单' }}</text>
+      </button>
+      <text v-if="state.errorMessage.value && state.list.value.length" class="error" role="alert">{{
+        state.errorMessage.value
+      }}</text>
+      <button role="button"
+        v-if="state.list.value.length && !state.finished.value"
+        :disabled="state.loading.value"
+        @click="state.loadMore"
+      >
+        {{ state.loading.value ? '加载中…' : '加载更多' }}
+      </button>
+      <text v-else-if="state.list.value.length" class="hint"
+        >已加载全部 {{ state.total.value }} 条</text
+      >
+    </template>
   </view>
 </template>
-
-<style scoped>
-.page {
-  min-height: 100vh;
-  padding: 12px 16px calc(env(safe-area-inset-bottom) + 24px);
-  color: #162631;
-  background: #f4f7f9;
-  box-sizing: border-box;
-}
-
-.warehouse-bar {
-  margin-bottom: 10px;
-  padding: 8px 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid #d6e0e6;
-  border-radius: 8px;
-  background: #eef5f8;
-}
-
-.warehouse-bar-text {
-  color: #245b78;
-  font-size: 13px;
-  font-weight: 550;
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.search-box {
-  flex: 1;
-  min-width: 0;
-  height: 44px;
-  padding: 0 14px;
-  display: flex;
-  align-items: center;
-  border: 1px solid #d6e0e6;
-  border-radius: 10px;
-  background: #fff;
-  box-sizing: border-box;
-}
-
-.search-input {
-  flex: 1;
-  min-width: 0;
-  margin-left: 8px;
-  color: #162631;
-  font-size: 15px;
-}
-
-.search-placeholder {
-  color: #98a4ac;
-  font-size: 15px;
-}
-
-.clear-btn {
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: -8px;
-}
-
-.list-meta {
-  margin: 14px 4px 10px;
-}
-
-.meta-total {
-  color: #6f7f89;
-  font-size: 12px;
-}
-
-.state {
-  min-height: 240px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.state-text {
-  color: #6f7f89;
-  font-size: 14px;
-  text-align: center;
-  padding: 0 16px;
-}
-
-.error-text {
-  color: #c94444;
-}
-
-.retry-btn {
-  margin-top: 6px;
-  padding: 8px 24px;
-  color: #fff;
-  font-size: 14px;
-  background: #245b78;
-  border-radius: 8px;
-}
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.card {
-  padding: 14px;
-  border: 1px solid #e1e8ec;
-  border-radius: 12px;
-  background: #fff;
-  box-sizing: border-box;
-}
-
-.card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.card-no {
-  color: #162631;
-  font-size: 15px;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.status-tag {
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 550;
-  flex-shrink: 0;
-}
-
-.tag-draft {
-  color: #6f7f89;
-  background: #eef2f4;
-}
-
-.tag-approved {
-  color: #e67e22;
-  background: #fef4e8;
-}
-
-.tag-finished {
-  color: #27ae60;
-  background: #eafaf1;
-}
-
-.material-name {
-  display: block;
-  margin-top: 8px;
-  color: #162631;
-  font-size: 14px;
-}
-
-.material-code {
-  display: block;
-  margin-top: 2px;
-  color: #98a4ac;
-  font-size: 12px;
-}
-
-.order-row {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.order-label {
-  color: #6f7f89;
-  font-size: 12px;
-}
-
-.order-value {
-  color: #162631;
-  font-size: 12px;
-}
-
-.bottom-row {
-  margin-top: 10px;
-  padding-top: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-top: 1px solid #eef2f4;
-}
-
-.qty-line {
-  display: flex;
-  gap: 16px;
-}
-
-.qty-text {
-  color: #6f7f89;
-  font-size: 12px;
-}
-
-.card-pressed {
-  opacity: 0.72;
-}
-
-.list-footer {
-  padding: 16px 0 4px;
-  text-align: center;
-  color: #98a4ac;
-  font-size: 12px;
-}
+<style scoped lang="scss">
+@use '@/shared/styles/production.scss';
 </style>

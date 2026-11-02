@@ -1,23 +1,24 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { onLoad, onPullDownRefresh } from '@dcloudio/uni-app';
-import {
-  getDetailProductionPicking,
-  confirmProductionPicking,
-} from '@/api/production/production';
-import { useSessionGuard, bindPageGuard } from '@/core/auth';
+import { onLoad, onShow, onPullDownRefresh } from '@dcloudio/uni-app';
+import { getDetailProductionPicking, confirmProductionPicking } from '@/api/production/production';
+import { useSessionGuard, PERMISSION_CODES as P } from '@/core/auth';
+import { useUserStore } from '@/stores/user';
+import { confirmOperation, useWriteAction } from '@/shared/composables/useWriteAction';
 import { PRODUCTION_PICKING_STATUS } from '@/constants/domain-enums';
 import OfflineBanner from '@/shared/components/OfflineBanner.vue';
 import type { AsyncStatus } from '@/shared/types/async-state';
 import type { ProductionPicking } from '@/types/production/production';
 
-bindPageGuard(useSessionGuard());
+const guard = useSessionGuard();
+const user = useUserStore();
+const write = useWriteAction();
 
 const status = ref<AsyncStatus>('idle');
 const errorMessage = ref('');
 const pickingId = ref('');
 const detail = ref<ProductionPicking | null>(null);
-const confirming = ref(false);
+const confirming = write.busy;
 
 const statusMap: Record<number, { label: string; class: string }> = {
   [PRODUCTION_PICKING_STATUS.DRAFT]: { label: '草稿', class: 's-draft' },
@@ -27,7 +28,8 @@ const statusMap: Record<number, { label: string; class: string }> = {
 };
 
 const canConfirm = () =>
-  detail.value?.status === PRODUCTION_PICKING_STATUS.APPROVED;
+  detail.value?.status === PRODUCTION_PICKING_STATUS.APPROVED &&
+  user.hasAnyPermission([P.productionPickingConfirm]);
 
 function formatDate(val?: string | null) {
   if (!val) return '--';
@@ -35,7 +37,12 @@ function formatDate(val?: string | null) {
 }
 
 async function loadDetail() {
-  if (!pickingId.value) return;
+  if (!pickingId.value || !(await guard.runGuard())) return;
+  if (!user.hasAnyPermission([P.productionPickingDetail])) {
+    status.value = 'error';
+    errorMessage.value = '没有领料详情权限，请联系管理员';
+    return;
+  }
 
   status.value = 'loading';
   try {
@@ -49,26 +56,41 @@ async function loadDetail() {
 }
 
 async function handleConfirm() {
-  confirming.value = true;
   try {
-    await confirmProductionPicking(pickingId.value);
-    uni.showToast({ title: '领料确认成功', icon: 'success' });
-    await loadDetail();
-  } catch (error) {
-    uni.showToast({
-      title: error instanceof Error ? error.message : '确认失败',
-      icon: 'none',
+    const done = await write.run({
+      allowed: () =>
+        user.isLoggedIn &&
+        user.hasAnyPermission([P.productionPickingConfirm]) &&
+        user.hasAnyPermission([P.productionPickingDetail]),
+      prepare: async () => {
+        if (
+          !(await confirmOperation(
+            '确认领料',
+            '确认后将扣减对应仓库库存和预留量，请核对物料与数量。',
+          ))
+        )
+          return false;
+        detail.value = await getDetailProductionPicking(pickingId.value);
+        if (detail.value.status !== PRODUCTION_PICKING_STATUS.APPROVED)
+          throw new Error('领料状态已变化，请核对最新状态');
+        if (!detail.value.warehouseId) throw new Error('领料仓库未指定，请先分配仓库');
+      },
+      execute: () => confirmProductionPicking(pickingId.value),
     });
-  } finally {
-    confirming.value = false;
+    if (done) {
+      uni.showToast({ title: '领料确认成功', icon: 'success' });
+      await loadDetail();
+    }
+  } catch (error) {
+    uni.showToast({ title: error instanceof Error ? error.message : '确认失败', icon: 'none' });
   }
 }
 
 onLoad((query) => {
   pickingId.value = String(query?.id || '');
   uni.setNavigationBarTitle({ title: '领料单详情' });
-  loadDetail();
 });
+onShow(() => void loadDetail());
 
 onPullDownRefresh(async () => {
   await loadDetail();

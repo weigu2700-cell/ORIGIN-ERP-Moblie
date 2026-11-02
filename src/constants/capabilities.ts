@@ -11,7 +11,8 @@ export type FeatureKey =
   | 'production-inbound'
   | 'sales-outbound'
   | 'production-order'
-  | 'sales-order';
+  | 'sales-order'
+  | 'production-report';
 
 export interface FeatureCapability {
   key: FeatureKey;
