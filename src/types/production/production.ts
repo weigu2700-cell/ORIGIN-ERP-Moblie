@@ -20,6 +20,7 @@ export interface ProductionOrderQuery {
 
 export interface ProductionOrder {
   id: EntityId;
+  warehouseId?: EntityId | null;
   productionDemandId: EntityId;
   productionDemandNo: string;
   materialId: EntityId;
@@ -127,9 +128,9 @@ export interface CreateProductionReport {
   productionOrderId: EntityId;
   materialId: EntityId;
   warehouseId: EntityId;
-  reportQuantity: number;
-  qualifiedQuantity: number;
-  scrappedQuantity: number;
+  reportQuantity: number | string;
+  qualifiedQuantity: number | string;
+  scrappedQuantity: number | string;
   reportTime?: string;
   remark?: string;
 }

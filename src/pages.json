@@ -168,6 +168,38 @@
       "style": {
         "navigationBarTitleText": "扫一扫"
       }
+    },
+    {
+      "path": "apps/production-report/index",
+      "style": {
+        "navigationBarTitleText": "生产报工",
+        "enablePullDownRefresh": true,
+        "onReachBottomDistance": 50
+      }
+    },
+    {
+      "path": "apps/production-report/detail",
+      "style": {
+        "navigationBarTitleText": "报工详情",
+        "enablePullDownRefresh": true,
+        "onReachBottomDistance": 50
+      }
+    },
+    {
+      "path": "apps/production-report/create",
+      "style": {
+        "navigationBarTitleText": "登记报工",
+        "enablePullDownRefresh": false,
+        "onReachBottomDistance": 50
+      }
+    },
+    {
+      "path": "apps/production-inbound/detail",
+      "style": {
+        "navigationBarTitleText": "成品入库详情",
+        "enablePullDownRefresh": true,
+        "onReachBottomDistance": 50
+      }
     }
   ],
   "tabBar": {

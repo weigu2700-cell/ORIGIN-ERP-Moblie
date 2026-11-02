@@ -32,6 +32,7 @@ export const PERMISSION_CODES = Object.freeze({
 
   // ---------- 生产领料 ----------
   productionPickingList: 'production:picking:list',
+  productionPickingDetail: 'production:picking:get',
   productionPickingApprove: 'production:picking:approve',
   productionPickingConfirm: 'production:picking:confirm',
 

@@ -1,59 +1,65 @@
-/**
- * 网络连接检测 —— 文档 4.2 节要求。
- * 读取请求可重试；写请求不自动重试。
- */
 import { ref, onUnmounted } from 'vue';
+
+const browserOnline = () => typeof navigator === 'undefined' || navigator.onLine !== false;
+
+/** 使用原生网络结果；不能用 || 把明确的离线结果覆盖成在线。 */
+export function getOnlineStatus(): Promise<boolean> {
+  if (typeof uni === 'undefined' || !uni.getNetworkType) return Promise.resolve(browserOnline());
+  return new Promise((resolve) => {
+    uni.getNetworkType({
+      success: (result) => resolve(result.networkType !== 'none'),
+      fail: () => resolve(browserOnline()),
+    });
+  });
+}
 
 export function useConnectivity() {
   const online = ref(true);
   let unsubscribe: (() => void) | null = null;
+  let active = false;
+  let updateSequence = 0;
 
-  async function updateStatus() {
-    online.value =
-      (uni.getNetworkType && (await uni.getNetworkType({})).networkType !== 'none') ||
-      navigator.onLine !== false;
+  async function checkConnection() {
+    const sequence = ++updateSequence;
+    const value = await getOnlineStatus();
+    if (sequence === updateSequence) online.value = value;
+    return online.value;
   }
 
   function startListening() {
-    updateStatus();
+    if (active) return;
+    active = true;
+    void checkConnection();
     if (typeof uni !== 'undefined' && uni.onNetworkStatusChange) {
-      uni.onNetworkStatusChange((res) => {
-        online.value = res.isConnected;
-      });
+      const listener = (result: UniApp.OnNetworkStatusChangeSuccess) => {
+        if (active) {
+          updateSequence++;
+          online.value = result.isConnected;
+        }
+      };
+      uni.onNetworkStatusChange(listener);
+      unsubscribe = () => uni.offNetworkStatusChange?.(listener);
     } else if (typeof window !== 'undefined') {
-      const onOnline = () => {
-        online.value = true;
+      const listener = () => {
+        updateSequence++;
+        online.value = browserOnline();
       };
-      const onOffline = () => {
-        online.value = false;
-      };
-      window.addEventListener('online', onOnline);
-      window.addEventListener('offline', onOffline);
+      window.addEventListener('online', listener);
+      window.addEventListener('offline', listener);
       unsubscribe = () => {
-        window.removeEventListener('online', onOnline);
-        window.removeEventListener('offline', onOffline);
+        window.removeEventListener('online', listener);
+        window.removeEventListener('offline', listener);
       };
     }
   }
 
   function stopListening() {
-    if (unsubscribe) {
-      unsubscribe();
-      unsubscribe = null;
-    }
-  }
-
-  function checkConnection() {
-    updateStatus();
-    return online.value;
+    active = false;
+    updateSequence++;
+    unsubscribe?.();
+    unsubscribe = null;
   }
 
   onUnmounted(stopListening);
-
-  return {
-    online,
-    startListening,
-    stopListening,
-    checkConnection,
-  };
+  return { online, startListening, stopListening, checkConnection };
 }
