@@ -117,9 +117,13 @@ class Session extends ChangeNotifier {
     Set<String> codes = {};
     final available = context['businessAvailable'] == true;
     if (available) {
-      user = await api.call('/system/user/current') as Json;
-      final items = await api.call('/system/permission') as List;
-      codes = items.map((p) => p['code'].toString()).toSet();
+      // 两个请求互不依赖，并行发出，启动时少等一个往返。
+      final results = await Future.wait([
+        api.call('/system/user/current'),
+        api.call('/system/permission'),
+      ]);
+      user = results[0] as Json;
+      codes = (results[1] as List).map((p) => p['code'].toString()).toSet();
     }
     api.check(ticket);
     profile = user;
