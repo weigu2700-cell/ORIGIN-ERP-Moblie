@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../domain/chat.dart';
 import 'api.dart';
@@ -134,6 +135,21 @@ class ChatStore extends ChangeNotifier {
     }
   }
 
+  /// 后端要求 clientId 为 UUID，且同一安装实例保持稳定（重连时替换旧连接）。
+  Future<String> _clientId() async {
+    const storage = FlutterSecureStorage();
+    const key = 'origin.chat.client_id';
+    try {
+      final saved = await storage.read(key: key);
+      if (saved != null && saved.length == 36) return saved;
+      final created = _uuid();
+      await storage.write(key: key, value: created);
+      return created;
+    } catch (_) {
+      return _uuid();
+    }
+  }
+
   void _startRealtime() {
     final pushed = api.pushed;
     if (pushed != null) {
@@ -144,7 +160,7 @@ class ChatStore extends ChangeNotifier {
     _socket = ChatSocket(
       api: api,
       baseUrl: session.api.baseUrl,
-      clientId: 'mobile-${session.api.baseUrl.hashCode}',
+      clientId: _clientId,
       onState: (s) {
         connection = s;
         notifyListeners();

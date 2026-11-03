@@ -13,7 +13,7 @@ enum ChatConnection { idle, connecting, online, reconnecting, offline }
 class ChatSocket {
   final ChatApi api;
   final String baseUrl;
-  final String clientId;
+  final Future<String> Function() clientId;
   final void Function(ChatConnection) onState;
   final void Function() onReady;
   final void Function(ChatEvent) onEvent;
@@ -96,7 +96,7 @@ class ChatSocket {
       _attempt == 0 ? ChatConnection.connecting : ChatConnection.reconnecting,
     );
     try {
-      final ticket = await api.issueTicket(clientId);
+      final ticket = await api.issueTicket(await clientId());
       if (_stopped || mine != _generation) return;
       final ws = await WebSocket.connect(_uri(ticket.path).toString());
       if (_stopped || mine != _generation) {
