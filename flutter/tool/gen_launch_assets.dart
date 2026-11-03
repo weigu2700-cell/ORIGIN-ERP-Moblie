@@ -72,4 +72,41 @@ void main() {
       logoFraction: 0.5,
     );
   });
+
+  testWidgets('生成应用图标母版', (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final key = GlobalKey();
+    tester.view.physicalSize = const Size(1024, 1024);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: RepaintBoundary(
+          key: key,
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF18384B), Color(0xFF245B78)],
+              ),
+            ),
+            child: const Center(child: OriginLogo(size: 640, onDark: true)),
+          ),
+        ),
+      ),
+    );
+    await tester.runAsync(() async {
+      final boundary =
+          key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+      final image = await boundary.toImage();
+      final data = await image.toByteData(format: ui.ImageByteFormat.png);
+      await File('output/app-icon-1024.png').parent.create(recursive: true);
+      await File(
+        'output/app-icon-1024.png',
+      ).writeAsBytes(data!.buffer.asUint8List());
+      image.dispose();
+    });
+  });
 }
