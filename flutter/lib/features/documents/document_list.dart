@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/api.dart';
-import '../core/session.dart';
-import '../domain/warehouses.dart';
-import '../domain/documents.dart';
-import '../ui/common.dart';
-import '../ui/theme.dart';
-import '../ui/cards.dart';
+import 'package:origin_mobile/data/document_repository.dart';
+import 'package:origin_mobile/core/api.dart';
+import 'package:origin_mobile/core/session.dart';
+import 'package:origin_mobile/data/warehouse_repository.dart';
+import 'package:origin_mobile/domain/documents.dart';
+import 'package:origin_mobile/ui/common.dart';
+import 'package:origin_mobile/ui/theme.dart';
+import 'package:origin_mobile/ui/cards.dart';
 
 class DocumentListPage extends StatefulWidget {
   final Session session;

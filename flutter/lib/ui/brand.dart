@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'theme.dart';
+import 'package:origin_mobile/ui/theme.dart';
 
 /// 原点智造标志：与 Web 管理端 origin-logo.svg 相同的几何图形（64×64 视口）。
 class OriginLogo extends StatelessWidget {

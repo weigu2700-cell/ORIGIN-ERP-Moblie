@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../domain/chat.dart';
-import '../domain/chat_format.dart';
-import '../ui/cards.dart';
-import '../ui/theme.dart';
+import 'package:origin_mobile/domain/chat.dart';
+import 'package:origin_mobile/domain/chat_format.dart';
+import 'package:origin_mobile/ui/cards.dart';
+import 'package:origin_mobile/ui/theme.dart';
 
 const _palette = [
   Color(0xFF3C7C9C),

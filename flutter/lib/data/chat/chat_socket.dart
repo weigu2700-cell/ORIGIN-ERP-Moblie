@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
-import '../domain/chat.dart';
-import 'chat_api.dart';
+import 'package:origin_mobile/domain/chat.dart';
+import 'package:origin_mobile/data/chat/chat_api.dart';
 
 enum ChatConnection { idle, connecting, online, reconnecting, offline }
 
@@ -54,8 +54,9 @@ class ChatSocket {
 
   /// 应用回到前台或网络恢复时调用。
   void resume() {
-    if (_stopped || _socket?.readyState == WebSocket.open || _retry != null)
+    if (_stopped || _socket?.readyState == WebSocket.open || _retry != null) {
       return;
+    }
     _attempt = 0;
     unawaited(_connect());
   }
@@ -137,8 +138,9 @@ class ChatSocket {
             });
             return;
           }
-          if (frame['type'] == 'PONG' || frame['type'] == 'PROTOCOL.ERROR')
+          if (frame['type'] == 'PONG' || frame['type'] == 'PROTOCOL.ERROR') {
             return;
+          }
           if (frame['eventId'] != null) onEvent(ChatEvent.fromJson(frame));
         },
         onDone: () {

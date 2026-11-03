@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:origin_mobile/data/document_repository.dart';
 import 'package:origin_mobile/core/api.dart';
 import 'package:origin_mobile/core/session.dart';
 import 'package:origin_mobile/domain/documents.dart';
@@ -10,7 +11,7 @@ import 'package:origin_mobile/domain/notification_targets.dart';
 
 import 'support/fakes.dart';
 
-import 'package:origin_mobile/domain/warehouses.dart';
+import 'package:origin_mobile/data/warehouse_repository.dart';
 
 void main() {
   test('仓库使用枚举名并加载后续分页', () async {

@@ -5,10 +5,11 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../core/api.dart';
-import '../core/session.dart';
-import '../ui/common.dart';
-import '../ui/theme.dart';
+import 'package:origin_mobile/core/api.dart';
+import 'package:origin_mobile/core/session.dart';
+import 'package:origin_mobile/ui/common.dart';
+import 'package:origin_mobile/ui/theme.dart';
+import 'package:origin_mobile/data/assistant_repository.dart';
 
 /// AI 助手：默认进入新对话，历史会话通过左侧抽屉管理。
 class AssistantPage extends StatefulWidget {
@@ -19,6 +20,7 @@ class AssistantPage extends StatefulWidget {
 }
 
 class _AssistantPageState extends State<AssistantPage> {
+  late final assistant = AssistantRepository(widget.session);
   final scaffold = GlobalKey<ScaffoldState>();
   final chat = GlobalKey<_ChatViewState>();
   final search = TextEditingController();
@@ -38,7 +40,7 @@ class _AssistantPageState extends State<AssistantPage> {
     final ticket = ++loadSequence;
     setState(() => error = null);
     try {
-      final rows = await widget.session.api.call('/ai/conversation') as List;
+      final rows = await assistant.conversations();
       if (mounted && ticket == loadSequence) {
         setState(
           () => conversations = rows.cast<Json>()
@@ -308,6 +310,7 @@ class ChatView extends StatefulWidget {
 }
 
 class _ChatViewState extends State<ChatView> with WidgetsBindingObserver {
+  late final assistant = AssistantRepository(widget.session);
   final input = TextEditingController(), scroll = ScrollController();
   int loadSequence = 0;
   List<Json> messages = [];
@@ -376,9 +379,8 @@ class _ChatViewState extends State<ChatView> with WidgetsBindingObserver {
       actions = [];
     });
     try {
-      final detail =
-          await widget.session.api.call('/ai/conversation/$id') as Json;
-      final history = await widget.session.api.call('/ai/message/$id') as List;
+      final detail = await assistant.conversation(id);
+      final history = await assistant.messages(id);
       if (mounted && ticket == loadSequence) {
         setState(() {
           conversation = detail;
@@ -434,15 +436,13 @@ class _ChatViewState extends State<ChatView> with WidgetsBindingObserver {
     try {
       if (cid == null) {
         // 新对话在第一次发送时才在服务端创建，避免产生空会话。
-        final created =
-            await widget.session.api.call('/ai/conversation', method: 'POST')
-                as Json;
+        final created = await assistant.create();
         widget.session.api.check(generation);
         if (!mounted || ticket != turn) return;
-        cid = '${created['conversationId']}';
+        cid = created;
         widget.onCreated(cid!);
       }
-      await widget.session.api.stream(cid!, text, client, (event) {
+      await assistant.ask(cid!, text, client, (event) {
         if (!mounted || ticket != turn) return;
         setState(() {
           switch (event['type']) {
@@ -495,10 +495,7 @@ class _ChatViewState extends State<ChatView> with WidgetsBindingObserver {
         return;
       }
       widget.session.api.check(ticket);
-      await widget.session.api.call(
-        '/ai/conversation/$id/archive',
-        method: 'PUT',
-      );
+      await assistant.archive(id);
       if (mounted) {
         await load();
         widget.onArchived();
@@ -535,10 +532,7 @@ class _ChatViewState extends State<ChatView> with WidgetsBindingObserver {
       if (!widget.session.can('purchase:order:approve')) {
         throw const ApiFailure('权限已变化');
       }
-      await widget.session.api.call(
-        '/ai/action/${Uri.encodeComponent(action['token'].toString())}/execute',
-        method: 'POST',
-      );
+      await assistant.executeAction(action['token'].toString());
       if (mounted) {
         setState(() => actions.remove(action));
         feedback(context, '操作已执行，请核对业务单据');

@@ -1,12 +1,14 @@
+// ignore_for_file: avoid_print
 // 联调自检：对真实后端执行只读请求并检查字段形状。
 // 用法：LIVE_URL=http://localhost:8080 LIVE_USER=.. LIVE_PASS=.. ./tool/flutterw test tool/live_check.dart
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:origin_mobile/data/document_repository.dart';
 import 'package:origin_mobile/core/api.dart';
 import 'package:origin_mobile/core/session.dart';
 import 'package:origin_mobile/domain/documents.dart';
-import 'package:origin_mobile/domain/warehouses.dart';
+import 'package:origin_mobile/data/warehouse_repository.dart';
 
 import '../test/support/fakes.dart';
 

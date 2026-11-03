@@ -1,5 +1,5 @@
-import '../core/api.dart';
-import '../core/session.dart';
+import 'package:origin_mobile/core/api.dart';
+import 'package:origin_mobile/core/session.dart';
 
 class WarehouseRepository {
   final Session session;

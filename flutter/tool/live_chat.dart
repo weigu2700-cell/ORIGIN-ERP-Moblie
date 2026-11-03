@@ -1,12 +1,12 @@
+// ignore_for_file: avoid_print
 // 聊天真实接口联调：用 HttpChatApi + ChatStore 走完整流程（会写入测试数据）。
 // 用法：LIVE_URL=http://localhost:8080 LIVE_USER=.. LIVE_PASS=.. ./tool/flutterw test tool/live_chat.dart
-import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:origin_mobile/core/api.dart';
-import 'package:origin_mobile/core/chat_store.dart';
+import 'package:origin_mobile/data/chat/chat_store.dart';
 import 'package:origin_mobile/core/session.dart';
 
 import '../test/support/fakes.dart';

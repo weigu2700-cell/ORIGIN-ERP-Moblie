@@ -253,8 +253,9 @@ class ApiClient {
         check(ticket);
         if (payload == '[DONE]') break;
         final event = jsonDecode(payload) as Map<String, dynamic>;
-        if (event['type'] == 'ERROR')
+        if (event['type'] == 'ERROR') {
           throw ApiFailure(event['content']?.toString() ?? 'AI 响应失败');
+        }
         onEvent(event);
       }
     } finally {

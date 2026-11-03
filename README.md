@@ -145,17 +145,36 @@ Java 21、Spring Boot 4、MyBatis-Plus、MySQL、Redis、Flyway、WebSocket，AI
 ### 代码结构
 
 ```text
-flutter/lib/
-  core/       API 客户端、请求取消、会话与安全存储
-  domain/     单据定义、权限与状态、数量精度、仓库规则
-  features/   登录、消息、工作台、库存与单据、报工、扫码、AI 助手
-  ui/         主题与设计 token、通用卡片、状态与确认组件
-flutter/test/ 契约、身份隔离、页面与布局测试
-flutter/tool/ 运行脚本、平台配置、预览与联调自检
-docs/         设计稿与业务需求、权限补齐 SQL
+.
+├── flutter/                     Flutter 工程（App 本体）
+│   ├── lib/
+│   │   ├── main.dart            入口：读取配置、创建会话、启动 App
+│   │   ├── app/                 应用壳：路由表、登录态门禁、底部导航、启动页
+│   │   ├── core/                基础设施：API 客户端、会话与安全存储、编译期配置
+│   │   ├── data/                数据层：按业务划分的 Repository，接口路径只出现在这里
+│   │   │   └── chat/            员工聊天：REST 接口、WebSocket 连接、会话状态 ChatStore
+│   │   ├── domain/              纯业务规则与模型：单据定义、状态流转、权限码、数量精度
+│   │   ├── features/            页面，一个业务一个目录
+│   │   │   ├── auth/            组织登录
+│   │   │   ├── workspace/       工作台与全部应用
+│   │   │   ├── messages/        消息：会话列表、单聊群聊、通讯录、系统通知
+│   │   │   ├── assistant/       AI 助手与历史会话抽屉
+│   │   │   ├── documents/       单据列表与详情、生产报工
+│   │   │   └── scan/            扫一扫
+│   │   └── ui/                  设计 token、主题、通用卡片与状态组件
+│   ├── test/                    契约、身份隔离、聊天与页面布局测试
+│   │   └── support/             测试夹具与内存聊天后端（仅测试使用）
+│   ├── tool/                    脚本：flutterw、check.sh、预览截图、联调自检
+│   ├── env/                     编译期环境配置（仅 example.json 入库）
+│   ├── assets/                  应用内图片资源
+│   └── android/ ios/ macos/     各平台工程与启动图、图标
+├── docs/
+│   ├── design/                  设计稿与界面展示图
+│   └── sql/                     开发库权限补齐 SQL
+└── .github/workflows/           CI：格式、静态分析、测试
 ```
 
-分层为「页面 → Repository → API 客户端」：页面只管展示与局部状态，业务规则（状态流转、权限码、数量精度）放在 `domain/`，网络与会话放在 `core/`。
+依赖方向自上而下：`features → data → core`，`features` 与 `data` 可读取 `domain`；`domain` 不依赖 Flutter 与网络；`ui` 只放与业务无关的展示组件。页面不直接拼接口路径，新增接口时先在 `data/` 里加方法，再由页面调用。
 
 ### 关键工程约定
 
@@ -181,7 +200,14 @@ cd flutter
 ./tool/flutterw run --dart-define=API_BASE_URL=http://localhost:8080
 ```
 
-`API_BASE_URL` 是后端地址，**不带 `/api` 前缀**，在编译时写入，修改后需重新启动（热重载不生效）。
+`API_BASE_URL` 是后端地址，**不带 `/api` 前缀**，在编译时写入，修改后需重新启动（热重载不生效）。也可以把地址写进配置文件，避免每次敲参数：
+
+```bash
+cp env/example.json env/dev.json      # 修改其中的地址；env/*.json 已被 git 忽略
+./tool/flutterw run --dart-define-from-file=env/dev.json
+```
+
+开发、测试、生产各用一个本地文件即可，真实地址不会进入仓库。
 
 | 运行环境 | 地址 |
 | --- | --- |
@@ -208,8 +234,11 @@ LIVE_URL=http://localhost:8080 LIVE_USER=<账号> LIVE_PASS=<密码> ./tool/flut
 
 ### 开发与测试
 
+提交前运行 `./tool/check.sh`，依次执行格式检查、静态分析和全部测试；GitHub Actions 对每次推送与 PR 做同样的检查。
+
 ```bash
 cd flutter
+./tool/check.sh                               # 一键检查
 ./tool/flutterw --format-dart lib test tool   # 格式化
 ./tool/flutterw analyze                       # 静态分析
 ./tool/flutterw test                          # 契约、身份隔离、页面与布局测试

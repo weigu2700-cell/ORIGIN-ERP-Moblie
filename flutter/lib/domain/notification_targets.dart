@@ -1,4 +1,4 @@
-import 'documents.dart';
+import 'package:origin_mobile/domain/documents.dart';
 
 /// 只映射服务端实际发布的业务类型，未知类型保留为通知正文。
 DocSpec? notificationTarget(String? businessType) {

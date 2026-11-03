@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../core/api.dart';
-import '../core/session.dart';
-import '../domain/warehouses.dart';
-import '../domain/quantity.dart';
-import '../domain/documents.dart';
-import 'document_list.dart';
-import '../ui/cards.dart';
-import '../ui/common.dart';
-import '../ui/theme.dart';
+import 'package:origin_mobile/core/api.dart';
+import 'package:origin_mobile/core/session.dart';
+import 'package:origin_mobile/data/warehouse_repository.dart';
+import 'package:origin_mobile/domain/quantity.dart';
+import 'package:origin_mobile/domain/documents.dart';
+import 'package:origin_mobile/features/documents/document_list.dart';
+import 'package:origin_mobile/ui/cards.dart';
+import 'package:origin_mobile/ui/common.dart';
+import 'package:origin_mobile/ui/theme.dart';
+import 'package:origin_mobile/data/production_repository.dart';
 
 class ReportFormPage extends StatefulWidget {
   final Session session;
@@ -19,6 +20,7 @@ class ReportFormPage extends StatefulWidget {
 }
 
 class _ReportFormPageState extends State<ReportFormPage> {
+  late final production = ProductionRepository(widget.session);
   final form = GlobalKey<FormState>();
   final report = TextEditingController(),
       qualified = TextEditingController(),
@@ -89,23 +91,17 @@ class _ReportFormPageState extends State<ReportFormPage> {
       if (!widget.session.can('prd:report:add')) {
         throw const ApiFailure('没有新增报工权限');
       }
-      final latest =
-          await widget.session.api.call('/prd/order/${widget.order['id']}')
-              as Json;
+      final latest = await production.order(widget.order['id']);
       if (latest['status'] != 2) throw const ApiFailure('订单已不在生产中，请返回核对');
-      await widget.session.api.call(
-        '/prd/report',
-        method: 'POST',
-        body: {
-          'productionOrderId': widget.order['id'].toString(),
-          'materialId': widget.order['materialId'].toString(),
-          'warehouseId': warehouse,
-          'reportQuantity': report.text,
-          'qualifiedQuantity': qualified.text,
-          'scrappedQuantity': scrapped.text,
-          'remark': remark.text,
-        },
-      );
+      await production.createReport({
+        'productionOrderId': widget.order['id'].toString(),
+        'materialId': widget.order['materialId'].toString(),
+        'warehouseId': warehouse,
+        'reportQuantity': report.text,
+        'qualifiedQuantity': qualified.text,
+        'scrappedQuantity': scrapped.text,
+        'remark': remark.text,
+      });
       if (mounted) {
         setState(() => saved = true);
         feedback(context, '报工草稿已保存，请在报工列表核对并审批');

@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/api.dart';
-import '../core/chat_socket.dart';
-import '../core/chat_store.dart';
-import '../core/session.dart';
-import '../domain/chat_format.dart';
-import '../domain/notification_targets.dart';
-import '../ui/cards.dart';
-import '../ui/common.dart';
-import 'chat_widgets.dart';
-import '../ui/theme.dart';
-import 'workspace.dart' show appColor, appIcon;
+import 'package:origin_mobile/core/api.dart';
+import 'package:origin_mobile/data/chat/chat_socket.dart';
+import 'package:origin_mobile/data/chat/chat_store.dart';
+import 'package:origin_mobile/core/session.dart';
+import 'package:origin_mobile/domain/chat_format.dart';
+import 'package:origin_mobile/domain/notification_targets.dart';
+import 'package:origin_mobile/ui/cards.dart';
+import 'package:origin_mobile/ui/common.dart';
+import 'package:origin_mobile/features/messages/chat_widgets.dart';
+import 'package:origin_mobile/ui/theme.dart';
+import 'package:origin_mobile/features/workspace/workspace.dart'
+    show appColor, appIcon;
+import 'package:origin_mobile/data/notification_repository.dart';
 
 const _notificationBlue = AppTokens.brand;
 
@@ -25,6 +27,7 @@ class MessagesPage extends StatefulWidget {
 }
 
 class _MessagesPageState extends State<MessagesPage> {
+  late final notifications = NotificationRepository(widget.session);
   Json? latest;
   int unread = 0, sequence = 0;
   bool loading = true;
@@ -39,15 +42,8 @@ class _MessagesPageState extends State<MessagesPage> {
     final ticket = ++sequence;
     setState(() => error = null);
     try {
-      final page =
-          await widget.session.api.call(
-                '/sys/notification',
-                query: {'pageNum': 1, 'pageSize': 1},
-              )
-              as Json;
-      final count = await widget.session.api.call(
-        '/sys/notification/unread/count',
-      );
+      final page = await notifications.page(1, 1);
+      final count = await notifications.unreadCount();
       if (!mounted || ticket != sequence) return;
       final rows = (page['records'] as List).cast<Json>();
       setState(() {
@@ -370,6 +366,7 @@ class SystemNotificationsPage extends StatefulWidget {
 }
 
 class _SystemNotificationsPageState extends State<SystemNotificationsPage> {
+  late final notifications = NotificationRepository(widget.session);
   List<Json> rows = []; // 最新在前，配合 reverse 列表显示为最新在底部
   int page = 0, total = 0, unread = 0, sequence = 0;
   bool loading = true, more = false, busy = false;
@@ -389,15 +386,8 @@ class _SystemNotificationsPageState extends State<SystemNotificationsPage> {
       error = null;
     });
     try {
-      final data =
-          await widget.session.api.call(
-                '/sys/notification',
-                query: {'pageNum': next, 'pageSize': 20},
-              )
-              as Json;
-      final count = await widget.session.api.call(
-        '/sys/notification/unread/count',
-      );
+      final data = await notifications.page(next, 20);
+      final count = await notifications.unreadCount();
       if (!mounted || ticket != sequence) return;
       final items = (data['records'] as List).cast<Json>();
       setState(() {
@@ -422,14 +412,9 @@ class _SystemNotificationsPageState extends State<SystemNotificationsPage> {
     if (busy) return;
     setState(() => busy = true);
     try {
-      final detail =
-          await widget.session.api.call('/sys/notification/${item['id']}')
-              as Json;
+      final detail = await notifications.detail(item['id']);
       if (detail['isRead'] != true) {
-        await widget.session.api.call(
-          '/sys/notification/${item['id']}/readed',
-          method: 'PUT',
-        );
+        await notifications.markRead(item['id']);
         if (mounted && item['isRead'] != true) {
           setState(() {
             item['isRead'] = true;
@@ -482,10 +467,7 @@ class _SystemNotificationsPageState extends State<SystemNotificationsPage> {
     if (busy) return;
     setState(() => busy = true);
     try {
-      await widget.session.api.call(
-        '/sys/notification/all/readed',
-        method: 'PUT',
-      );
+      await notifications.markAllRead();
       if (mounted) {
         setState(() {
           for (final row in rows) {

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../core/api.dart';
-import '../core/session.dart';
-import '../domain/documents.dart';
-import '../ui/cards.dart';
-import '../ui/common.dart';
-import '../ui/theme.dart';
+import 'package:origin_mobile/data/document_repository.dart';
+import 'package:origin_mobile/core/api.dart';
+import 'package:origin_mobile/core/session.dart';
+import 'package:origin_mobile/domain/documents.dart';
+import 'package:origin_mobile/ui/cards.dart';
+import 'package:origin_mobile/ui/common.dart';
+import 'package:origin_mobile/ui/theme.dart';
 
 DocSpec specFor(String key) => documents.firstWhere((spec) => spec.key == key);
 IconData appIcon(String key) => switch (key) {
@@ -82,7 +83,7 @@ class _WorkspacePageState extends State<WorkspacePage> {
         failure = e;
       }
     }
-    if (mounted && ticket == loadSequence)
+    if (mounted && ticket == loadSequence) {
       setState(() {
         tasks = next
           ..sort(
@@ -97,6 +98,7 @@ class _WorkspacePageState extends State<WorkspacePage> {
         error = failure;
         loading = false;
       });
+    }
   }
 
   void open(DocSpec spec, {int? status}) => context.push(
@@ -368,10 +370,11 @@ class ApplicationGrid extends StatelessWidget {
                     onTap: () async {
                       if (key == 'scan') {
                         final code = await context.push<String>('/scan');
-                        if (code != null && context.mounted)
+                        if (code != null && context.mounted) {
                           context.push(
                             '/workspace/inventory?keyword=${Uri.encodeQueryComponent(code)}',
                           );
+                        }
                       } else {
                         context.push('/workspace/$key');
                       }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../core/session.dart';
-import '../domain/documents.dart';
-import 'common.dart';
-import 'theme.dart';
+import 'package:origin_mobile/core/session.dart';
+import 'package:origin_mobile/domain/documents.dart';
+import 'package:origin_mobile/ui/common.dart';
+import 'package:origin_mobile/ui/theme.dart';
 
 /// 数量显示：服务端返回 0.3000 这类小数，去掉多余的 0，保留最多四位。
 String fmtNum(dynamic value) {

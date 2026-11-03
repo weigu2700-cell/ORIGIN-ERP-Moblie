@@ -1,3 +1,4 @@
+// ignore_for_file: avoid_print
 // 从 OriginLogo 生成各平台启动图。用法：./tool/flutterw test tool/gen_launch_assets.dart
 import 'dart:io';
 import 'dart:ui' as ui;

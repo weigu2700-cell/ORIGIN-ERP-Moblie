@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import 'api.dart';
+import 'package:origin_mobile/core/api.dart';
 
 typedef Json = Map<String, dynamic>;
 

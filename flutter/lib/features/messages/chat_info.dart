@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/chat_store.dart';
-import '../domain/chat.dart';
-import '../ui/common.dart';
-import '../ui/theme.dart';
-import 'chat_widgets.dart';
+import 'package:origin_mobile/data/chat/chat_store.dart';
+import 'package:origin_mobile/domain/chat.dart';
+import 'package:origin_mobile/ui/common.dart';
+import 'package:origin_mobile/ui/theme.dart';
+import 'package:origin_mobile/features/messages/chat_widgets.dart';
 
 /// 群信息 / 单聊信息：成员、群名、静音、退出与解散；群主与管理员可管理成员。
 class ChatInfoPage extends StatefulWidget {
@@ -75,8 +75,9 @@ class _ChatInfoPageState extends State<ChatInfoPage> {
           title,
           '$text\n\n提交携带群版本 v${c.version}，冲突时提示刷新后重试。',
         ) ||
-        !mounted)
+        !mounted) {
       return;
+    }
     await run(task, done);
   }
 

@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
-import '../domain/chat.dart';
-import 'api.dart';
-import 'session.dart';
+import 'package:origin_mobile/domain/chat.dart';
+import 'package:origin_mobile/core/api.dart';
+import 'package:origin_mobile/core/session.dart';
 
 typedef Snapshot = ({
   List<Conversation> records,

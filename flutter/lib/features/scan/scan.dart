@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import '../ui/common.dart';
-import '../ui/theme.dart';
+import 'package:origin_mobile/ui/common.dart';
+import 'package:origin_mobile/ui/theme.dart';
 
 /// 扫一扫：全屏相机取景，底部手工输入兜底。只返回识别到的编码，不执行任何业务。
 class ScanPage extends StatefulWidget {

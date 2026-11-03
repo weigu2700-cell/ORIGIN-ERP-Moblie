@@ -1,4 +1,4 @@
-import 'chat.dart';
+import 'package:origin_mobile/domain/chat.dart';
 
 String _two(int n) => n.toString().padLeft(2, '0');
 String clock(DateTime d) => '${_two(d.hour)}:${_two(d.minute)}';

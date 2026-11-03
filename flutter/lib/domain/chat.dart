@@ -1,5 +1,5 @@
-import '../core/api.dart';
-import '../core/session.dart';
+import 'package:origin_mobile/core/api.dart';
+import 'package:origin_mobile/core/session.dart';
 
 /// 员工聊天 V1 领域模型，字段对齐后端 api.md。ID、seq 一律保持字符串。
 int cmpSeq(String a, String b) => BigInt.parse(

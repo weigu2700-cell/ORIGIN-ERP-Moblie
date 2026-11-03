@@ -19,3 +19,7 @@ output/
 .idea/
 *.iml
 .DS_Store
+
+# 环境配置：只提交 example.json，真实地址（含生产）放本地，不要提交
+env/*.json
+!env/example.json

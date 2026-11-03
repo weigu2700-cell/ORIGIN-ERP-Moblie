@@ -7,13 +7,13 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../core/chat_socket.dart';
-import '../core/chat_store.dart';
-import '../domain/chat.dart';
-import '../domain/chat_format.dart';
-import '../ui/common.dart';
-import '../ui/theme.dart';
-import 'chat_widgets.dart';
+import 'package:origin_mobile/data/chat/chat_socket.dart';
+import 'package:origin_mobile/data/chat/chat_store.dart';
+import 'package:origin_mobile/domain/chat.dart';
+import 'package:origin_mobile/domain/chat_format.dart';
+import 'package:origin_mobile/ui/common.dart';
+import 'package:origin_mobile/ui/theme.dart';
+import 'package:origin_mobile/features/messages/chat_widgets.dart';
 
 /// 单聊/群聊页：历史、实时消息、未读分割线、发送与附件。
 class ChatPage extends StatefulWidget {
@@ -60,8 +60,9 @@ class _ChatPageState extends State<ChatPage> {
 
   void onChat() {
     final n = chat.timelines[widget.id]?.length ?? 0;
-    if (n > lastCount && scroll.hasClients && scroll.offset > 140)
+    if (n > lastCount && scroll.hasClients && scroll.offset > 140) {
       hasNew = true;
+    }
     lastCount = n;
     // 被移出或退出：返回列表。
     if (chat.conversations[widget.id] == null &&

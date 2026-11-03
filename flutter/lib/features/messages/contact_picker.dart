@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/chat_store.dart';
-import '../domain/chat.dart';
-import '../ui/common.dart';
-import '../ui/theme.dart';
-import 'chat_widgets.dart';
+import 'package:origin_mobile/data/chat/chat_store.dart';
+import 'package:origin_mobile/domain/chat.dart';
+import 'package:origin_mobile/ui/common.dart';
+import 'package:origin_mobile/ui/theme.dart';
+import 'package:origin_mobile/features/messages/chat_widgets.dart';
 
 enum PickMode { direct, group, add }
 
@@ -453,11 +453,13 @@ class _ContactsPageState extends State<ContactsPage> {
                                       final id = await chat.startDirect(
                                         p.userId,
                                       );
-                                      if (context.mounted)
+                                      if (context.mounted) {
                                         context.go('/messages/chat/$id');
+                                      }
                                     } catch (e) {
-                                      if (context.mounted)
+                                      if (context.mounted) {
                                         feedback(context, chatErrorText(e));
+                                      }
                                     }
                                   },
                                 ),

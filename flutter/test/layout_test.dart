@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:origin_mobile/core/session.dart';
-import 'package:origin_mobile/main.dart';
+import 'package:origin_mobile/app/app.dart';
 
 import 'support/fakes.dart';
 

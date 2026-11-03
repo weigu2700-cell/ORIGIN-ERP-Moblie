@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:origin_mobile/main.dart';
-import 'package:origin_mobile/features/report_form.dart';
+import 'package:origin_mobile/app/app.dart';
+import 'package:origin_mobile/features/documents/report_form.dart';
 import 'package:origin_mobile/ui/theme.dart';
 
 import 'support/fakes.dart';

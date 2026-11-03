@@ -2,9 +2,9 @@ import 'package:flutter/cupertino.dart' show CupertinoDialogAction;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/session.dart';
-import 'brand.dart';
-import 'theme.dart';
+import 'package:origin_mobile/core/session.dart';
+import 'package:origin_mobile/ui/brand.dart';
+import 'package:origin_mobile/ui/theme.dart';
 
 class StateNotice extends StatelessWidget {
   final String message;
@@ -290,8 +290,9 @@ AppBar organizationBar(BuildContext context, Session session) => AppBar(
   titleSpacing: 20,
   title: InkWell(
     onTap: () async {
-      if (await confirm(context, '切换组织', '将退出当前账号并重新登录，未提交内容将丢失。'))
+      if (await confirm(context, '切换组织', '将退出当前账号并重新登录，未提交内容将丢失。')) {
         await session.logout();
+      }
     },
     child: Row(
       mainAxisSize: MainAxisSize.min,
@@ -325,10 +326,11 @@ AppBar organizationBar(BuildContext context, Session session) => AppBar(
           return;
         }
         final code = await context.push<String>('/scan');
-        if (code != null && context.mounted)
+        if (code != null && context.mounted) {
           context.push(
             '/workspace/inventory?keyword=${Uri.encodeQueryComponent(code)}',
           );
+        }
       },
       icon: Icon(Icons.qr_code_scanner, size: 22),
     ),

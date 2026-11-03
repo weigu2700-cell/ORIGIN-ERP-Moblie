@@ -1,6 +1,6 @@
 import 'package:origin_mobile/core/api.dart';
 import 'chat_mock.dart';
-import 'package:origin_mobile/core/chat_store.dart';
+import 'package:origin_mobile/data/chat/chat_store.dart';
 import 'package:origin_mobile/core/session.dart';
 
 class MemoryVault implements TokenVault {

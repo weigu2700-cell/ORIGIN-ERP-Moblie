@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 
 import 'package:origin_mobile/core/api.dart';
-import 'package:origin_mobile/core/chat_api.dart';
+import 'package:origin_mobile/data/chat/chat_api.dart';
 import 'package:origin_mobile/core/session.dart';
 import 'package:origin_mobile/domain/chat.dart';
 
@@ -299,15 +299,17 @@ class MockChatApi implements ChatApi {
     if (r.conv.dissolved) _fail(409, 'GROUP_NOT_WRITABLE', '该群已解散');
     final existed = _clientIndex['$me:$clientMessageId'];
     if (existed != null) {
-      if ((existed.text ?? '') != (text ?? ''))
+      if ((existed.text ?? '') != (text ?? '')) {
         _fail(409, 'IDEMPOTENCY_CONFLICT', '相同发送标识对应不同内容');
+      }
       return existed;
     }
     ChatFile? file;
     if (type != 'TEXT') {
       final up = _uploads.values.where((u) => u.file.id == fileId).firstOrNull;
-      if (up == null || up.status != 'READY')
+      if (up == null || up.status != 'READY') {
         _fail(409, 'FILE_NOT_READY', '文件尚未通过检查');
+      }
       file = up.file;
     }
     final m = _add(
@@ -323,12 +325,13 @@ class MockChatApi implements ChatApi {
           ? r.conv.peerUserId
           : r.members.firstWhere((x) => x.$1 != me).$1;
       Timer(const Duration(milliseconds: 1800), () {
-        if (!r.conv.dissolved && peer != null)
+        if (!r.conv.dissolved && peer != null) {
           _add(
             r,
             peer,
             text: '收到：${text.length > 20 ? text.substring(0, 20) : text}',
           );
+        }
       });
     }
     return _wait(m);
@@ -338,8 +341,9 @@ class MockChatApi implements ChatApi {
   Future<HistoryPage> history(String id, {String? beforeSeq, int limit = 30}) {
     final r = _room(id);
     var rows = r.messages.toList();
-    if (beforeSeq != null)
+    if (beforeSeq != null) {
       rows = rows.where((m) => cmpSeq(m.seq!, beforeSeq) < 0).toList();
+    }
     final page = rows.length > limit ? rows.sublist(rows.length - limit) : rows;
     return _wait((records: page, hasMore: rows.length > limit));
   }
@@ -394,8 +398,9 @@ class MockChatApi implements ChatApi {
   }
 
   void _version(_Room r, int expected) {
-    if (r.conv.version != expected)
+    if (r.conv.version != expected) {
       _fail(409, 'VERSION_CONFLICT', '群信息已被他人修改，请刷新');
+    }
     if (r.conv.dissolved) _fail(409, 'GROUP_NOT_WRITABLE', '该群已解散');
   }
 
@@ -437,8 +442,9 @@ class MockChatApi implements ChatApi {
   ) async {
     final r = _room(id);
     _version(r, version);
-    if (ids.any((i) => r.members.any((m) => m.$1 == i)))
+    if (ids.any((i) => r.members.any((m) => m.$1 == i))) {
       _fail(409, 'MEMBER_ALREADY_PRESENT', '成员已在群中');
+    }
     r.members.addAll([for (final i in ids) (i, 'MEMBER')]);
     _add(
       r,
@@ -498,8 +504,9 @@ class MockChatApi implements ChatApi {
   @override
   Future<void> leave(String id, int version) async {
     final r = _room(id);
-    if (r.conv.myRole == 'OWNER')
+    if (r.conv.myRole == 'OWNER') {
       _fail(409, 'OWNER_TRANSFER_REQUIRED', '请先转让群主');
+    }
     r.members.removeWhere((m) => m.$1 == me);
     _emit('CONVERSATION.REVOKED', id, {'reason': 'LEFT'});
   }
@@ -539,11 +546,12 @@ class MockChatApi implements ChatApi {
     CancelToken? cancel,
   }) async {
     for (final p in [0.25, 0.55, 0.85, 1.0]) {
-      if (cancel?.isCancelled ?? false)
+      if (cancel?.isCancelled ?? false) {
         throw DioException.requestCancelled(
           requestOptions: RequestOptions(),
           reason: 'cancel',
         );
+      }
       await Future<void>.delayed(const Duration(milliseconds: 220));
       onProgress(p);
     }

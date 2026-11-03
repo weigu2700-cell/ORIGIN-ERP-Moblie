@@ -7,11 +7,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../domain/chat.dart';
-import 'api.dart';
-import 'chat_api.dart';
-import 'chat_socket.dart';
-import 'session.dart';
+import 'package:origin_mobile/domain/chat.dart';
+import 'package:origin_mobile/core/api.dart';
+import 'package:origin_mobile/data/chat/chat_api.dart';
+import 'package:origin_mobile/data/chat/chat_socket.dart';
+import 'package:origin_mobile/core/session.dart';
 
 String _uuid() {
   final r = Random.secure();
@@ -236,8 +236,9 @@ class ChatStore extends ChangeNotifier {
                 ? ChatMessage.fromJson((e.payload['message'] as Map).cast())
                 : null);
         if (m == null || id == null) return;
-        if (conversations.containsKey(id) && timelines.containsKey(id))
+        if (conversations.containsKey(id) && timelines.containsKey(id)) {
           _mergeServer(id, [m]);
+        }
         if (!conversations.containsKey(id)) {
           api
               .conversation(id)
@@ -263,8 +264,9 @@ class ChatStore extends ChangeNotifier {
         } else if (!identical(old, c)) {
           old.merge(c);
         }
-        if (c.id == activeId && (conversations[c.id]?.unreadCount ?? 0) > 0)
+        if (c.id == activeId && (conversations[c.id]?.unreadCount ?? 0) > 0) {
           unawaited(markRead(c.id));
+        }
       case 'MEMBER.CHANGED':
         if (id != null) {
           members.remove(id);
@@ -318,8 +320,9 @@ class ChatStore extends ChangeNotifier {
       _mergeServer(id, page.records);
       hasOlder[id] = page.hasMore;
     }
-    if (conversations[id]?.isGroup ?? false)
+    if (conversations[id]?.isGroup ?? false) {
       unawaited(loadMembers(id).catchError((_) {}));
+    }
     notifyListeners();
     await markRead(id);
   }
@@ -461,13 +464,15 @@ class ChatStore extends ChangeNotifier {
   String? precheck(String name, int size) {
     final cfg = config;
     final ext = name.contains('.') ? name.split('.').last.toLowerCase() : '';
-    if (cfg != null && size > cfg.maxFileBytes)
+    if (cfg != null && size > cfg.maxFileBytes) {
       return '文件超过 ${cfg.maxFileBytes ~/ 1000000} MB 上限';
+    }
     if (size == 0) return '文件为空';
     if (cfg != null &&
         cfg.extensions.isNotEmpty &&
-        !cfg.extensions.contains(ext))
+        !cfg.extensions.contains(ext)) {
       return '不支持 .$ext 类型的文件';
+    }
     return null;
   }
 
@@ -544,8 +549,9 @@ class ChatStore extends ChangeNotifier {
   Future<void> cancelUpload(String id, ChatMessage m) async {
     _cancels.remove(m.id)?.cancel('用户取消');
     _dropLocal(id, m);
-    if (m.uploadId != null)
+    if (m.uploadId != null) {
       await api.cancelUpload(m.uploadId!).catchError((_) {});
+    }
   }
 
   Future<List<int>> download(String fileId) => api.download(fileId);

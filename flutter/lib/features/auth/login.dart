@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../core/session.dart';
-import '../ui/brand.dart';
-import '../ui/common.dart';
-import '../ui/theme.dart';
+import 'package:origin_mobile/core/session.dart';
+import 'package:origin_mobile/ui/brand.dart';
+import 'package:origin_mobile/ui/common.dart';
+import 'package:origin_mobile/ui/theme.dart';
+import 'package:origin_mobile/data/auth_repository.dart';
 
 class LoginPage extends StatefulWidget {
   final Session session;
@@ -13,6 +14,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  late final auth = AuthRepository(widget.session);
   final form = GlobalKey<FormState>();
   final tenant = TextEditingController(),
       username = TextEditingController(),
@@ -32,9 +34,7 @@ class _LoginPageState extends State<LoginPage> {
       error = null;
     });
     try {
-      final config =
-          await widget.session.api.call('/auth/tenant/context', auth: false)
-              as Json;
+      final config = await auth.tenantContext();
       if (!mounted) return;
       setState(() {
         configuration = config;
@@ -56,12 +56,7 @@ class _LoginPageState extends State<LoginPage> {
       error = null;
     });
     try {
-      await widget.session.api.call(
-        '/auth/tenant/resolve',
-        method: 'POST',
-        body: {'tenantCode': tenant.text.trim()},
-        auth: false,
-      );
+      await auth.resolveTenant(tenant.text.trim());
       if (!mounted) return;
       await widget.session.login(
         tenant.text.trim(),
@@ -143,7 +138,7 @@ class _LoginPageState extends State<LoginPage> {
                                     ],
                                     decoration: const InputDecoration(
                                       filled: false,
-                                      contentPadding: const EdgeInsets.fromLTRB(
+                                      contentPadding: EdgeInsets.fromLTRB(
                                         16,
                                         22,
                                         16,

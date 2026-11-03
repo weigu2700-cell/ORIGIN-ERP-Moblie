@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:origin_mobile/core/api.dart';
-import 'package:origin_mobile/core/chat_store.dart';
+import 'package:origin_mobile/data/chat/chat_store.dart';
 import 'package:origin_mobile/domain/chat.dart';
 import 'package:origin_mobile/domain/chat_format.dart';
-import 'package:origin_mobile/features/chat_page.dart';
+import 'package:origin_mobile/features/messages/chat_page.dart';
 import 'package:origin_mobile/ui/theme.dart';
 
 import 'support/fakes.dart';
