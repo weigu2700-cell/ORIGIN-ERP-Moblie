@@ -11,7 +11,6 @@
     <img src="https://img.shields.io/badge/TypeScript-4.9-3178c6?logo=typescript&logoColor=white" alt="TypeScript 4.9" />
     <img src="https://img.shields.io/badge/Vite-5-646cff?logo=vite&logoColor=white" alt="Vite 5" />
     <img src="https://img.shields.io/badge/vitest-1-6e9f18?logo=vitest&logoColor=white" alt="vitest" />
-    <img src="https://img.shields.io/badge/tests-64%20passed-brightgreen" alt="64 tests passed" />
   </p>
 </div>
 
@@ -31,28 +30,51 @@ ORIGIN ERP Mobile 是原点 ERP 的现场作业端，基于 uni-app、Vue 3 和 
 - **权限感知工作台**：根据当前用户权限动态展示快捷入口和业务待办，管理员自动兼容完整能力。
 - **仓库上下文**：支持切换并持久化当前仓库，库存与后续作业自动携带仓库条件。
 - **完整会话管理**：统一保存 JWT、加载用户与权限，在 401 时清理登录态并返回登录页。
+- **组织选择与安全切换**：核验组织编码，记住最近成功登录的组织；工作台和个人中心展示当前组织，切换时退出重登、取消旧请求并清空原组织仓库及业务摘要。
+- **单屏登录**：组织、账号、密码及登录按钮放在同一视口，较矮屏幕收起装饰区域，核验错误就地展示。
 - **统一请求体验**：集中处理响应解包、查询参数、超时、断网、业务异常和 Toast 提示。
 - **离线/弱网恢复**：网络断开时显示横幅提示，写入操作不自动重试，冲突状态明确可识别。
 - **通用列表模板**：可复用的 `useListState` 组合式函数，统一 loading/empty/error/分页状态。
 
 ## 当前能力
 
-| 功能 | 状态 | 说明 |
-| --- | --- | --- |
-| 登录与会话 | ✅ 已完成 | JWT 登录、会话恢复、退出及 401 处理 |
-| 用户与权限 | ✅ 已完成 | 用户资料、角色、权限加载和快捷入口控制 |
-| 移动工作台 | ✅ 已完成 | 业务摘要、待办、快捷功能、仓库切换 |
-| 库存查询 | ✅ 已完成 | 搜索、仓库过滤、分页、扫码、库存详情 |
-| 采购入库 | ✅ 已完成 | 列表搜索/扫码/分页、详情、上架操作 |
-| 生产领料 | ✅ 已完成 | 列表搜索/扫码/分页、详情、确认领料 |
-| 生产报工 | ✅ 已完成 | 生产订单登记、数量校验、列表/详情、审批/取消/完成/驳回 |
-| 成品入库 | ✅ 已完成 | 真实入库单查询、仓库过滤、审批与执行入库 |
-| 销售出库 | ✅ 已完成 | 列表搜索/扫码/分页、详情物料明细、确认出库 |
-| 生产订单 | ✅ 已完成 | 待生产/生产中双Tab、进度条、开始/完成操作 |
-| 销售订单 | ✅ 已完成 | 列表搜索/分页、详情物料明细（只读） |
-| 离线提示 | ✅ 已完成 | 网络断开横幅组件，所有业务页集成 |
+| 功能       | 状态      | 说明                                                          |
+| ---------- | --------- | ------------------------------------------------------------- |
+| 登录与会话 | ✅ 已完成 | 组织核验、JWT 登录、会话恢复、退出切换、旧响应隔离及 401 处理 |
+| 用户与权限 | ✅ 已完成 | 用户资料、角色、权限加载和快捷入口控制                        |
+| 移动工作台 | ✅ 已完成 | 业务摘要、待办、快捷功能、仓库切换                            |
+| 库存查询   | ✅ 已完成 | 搜索、仓库过滤、分页、扫码、库存详情                          |
+| 采购入库   | ✅ 已完成 | 列表搜索/扫码/分页、详情、上架操作                            |
+| 生产领料   | ✅ 已完成 | 列表搜索/扫码/分页、详情、确认领料                            |
+| 生产报工   | ✅ 已完成 | 生产订单登记、数量校验、列表/详情、审批/取消/完成/驳回        |
+| 成品入库   | ✅ 已完成 | 真实入库单查询、仓库过滤、审批与执行入库                      |
+| 销售出库   | ✅ 已完成 | 列表搜索/扫码/分页、详情物料明细、确认出库                    |
+| 生产订单   | ✅ 已完成 | 待生产/生产中双Tab、进度条、开始/完成操作                     |
+| 销售订单   | ✅ 已完成 | 列表搜索/分页、详情物料明细（只读）                           |
+| 离线提示   | ✅ 已完成 | 网络断开横幅组件，所有业务页集成                              |
 
 生产作业的状态、权限、数量及弱网处理见 [移动端生产闭环](docs/production-mobile.md)。
+
+以上业务能力适用于后端已开放业务的组织。当前后端 multi 模式仍返回 `businessAvailable=false`，移动端展示真实组织、基础身份和“当前组织暂未开放业务”，业务页面被守卫拦截；不能把上述功能表理解为多租户正式业务已经开放。
+
+## 组织登录与切换
+
+客户端通过配套后端 `GET /auth/tenant/context` 识别运行模式，不另外配置组织列表：
+
+| 场景           | 操作与行为                                                                                |
+| -------------- | ----------------------------------------------------------------------------------------- |
+| single 单企业  | 自动选择后端默认组织，输入原账号和密码登录                                                |
+| multi 首次登录 | 输入管理员提供的组织编码，核验名称后提交账号和密码                                        |
+| 最近组织       | 本地保留最多 5 个成功登录的编码与名称，通过组织输入框内的下拉入口选择；不提供公开企业目录 |
+| 切换组织       | 在工作台或个人中心点击当前组织，选择目标并确认退出，再重新登录；未提交内容不会保留        |
+| 加载或核验失败 | 组织字段内显示原因，点击“重试”或“核验”重新检查                                            |
+| 业务尚未开放   | 停留组织主页，可重新检查状态、查看基础身份或切换组织，不展示虚构业务数量                  |
+
+组织核验调用 `POST /auth/tenant/resolve`，登录提交 `tenantCode`、`username`、`password`，登录后通过 `GET /auth/tenant/session` 获取实际组织和 `businessAvailable`。旧后端缺少这些接口时应先升级后端。
+
+默认账号由数据库初始化方式决定：旧单企业开发 seed 为 `admin` / `OriginDev@123`，仅用于执行过该 seed 的开发库；Flyway 新租户使用开通时指定的管理员用户名与密码，没有统一默认账号。初始化顺序见 [后端部署说明](https://github.com/weigu2700-cell/ORIGIN-ERP-BackEnd#组织与多租户)。
+
+切换会话会取消旧 `uni.request`，拦截旧组织晚到的成功或 401 响应，清空权限、当前仓库与工作台内存状态。组织名称只是显示信息，实际授权以服务端签发的组织 JWT 为准。
 
 ## 扫码查询
 
@@ -80,7 +102,7 @@ ORIGIN ERP Mobile 是原点 ERP 的现场作业端，基于 uni-app、Vue 3 和 
 │  connectivity (useConnectivity)                        │
 ├─────────────────────────────────────────────────────┤
 │  Stores (Pinia)                                       │
-│  user · workbench                                     │
+│  user · organization · workbench                      │
 ├─────────────────────────────────────────────────────┤
 │  API Layer + Types                                    │
 │  auth · inventory · purchase · production · sales     │
@@ -95,18 +117,18 @@ ORIGIN ERP Mobile 是原点 ERP 的现场作业端，基于 uni-app、Vue 3 和 
 
 ## 技术栈
 
-| 分类 | 技术 |
-| --- | --- |
-| 跨端框架 | uni-app 3 |
-| 核心框架 | Vue 3.4、Composition API |
-| 开发语言 | TypeScript 4.9 |
-| 构建工具 | Vite 5 |
-| 状态管理 | Pinia 2 |
-| UI 组件 | Wot Design Uni |
-| 测试框架 | vitest + @vue/test-utils |
-| 代码规范 | ESLint + Prettier |
+| 分类     | 技术                                    |
+| -------- | --------------------------------------- |
+| 跨端框架 | uni-app 3                               |
+| 核心框架 | Vue 3.4、Composition API                |
+| 开发语言 | TypeScript 4.9                          |
+| 构建工具 | Vite 5                                  |
+| 状态管理 | Pinia 2                                 |
+| UI 组件  | Wot Design Uni                          |
+| 测试框架 | vitest + @vue/test-utils                |
+| 代码规范 | ESLint + Prettier                       |
 | 平台能力 | `uni.request`、扫码、存储、页面生命周期 |
-| 样式 | Sass、uni.scss |
+| 样式     | Sass、uni.scss                          |
 
 ## 快速开始
 
@@ -156,11 +178,11 @@ VITE_NATIVE_API_BASE_URL=http://192.168.1.100:8080
 
 各平台请求方式：
 
-| 平台 | 默认地址 | 说明 |
-| --- | --- | --- |
-| H5 开发 | `/api` | Vite 代理到 `API_PROXY_TARGET`，并移除 `/api` 前缀 |
-| H5 生产 | `VITE_API_BASE_URL` 或 `/api` | 使用完整 API 地址，或由部署服务器配置反向代理 |
-| App / 小程序 | `VITE_NATIVE_API_BASE_URL` | 必须是设备可以直接访问的完整地址 |
+| 平台         | 默认地址                      | 说明                                               |
+| ------------ | ----------------------------- | -------------------------------------------------- |
+| H5 开发      | `/api`                        | Vite 代理到 `API_PROXY_TARGET`，并移除 `/api` 前缀 |
+| H5 生产      | `VITE_API_BASE_URL` 或 `/api` | 使用完整 API 地址，或由部署服务器配置反向代理      |
+| App / 小程序 | `VITE_NATIVE_API_BASE_URL`    | 必须是设备可以直接访问的完整地址                   |
 
 > 真机中的 `localhost` 指向手机或 PDA 自身。请改用后端电脑的局域网 IP，并确保设备、电脑和防火墙允许互相访问。
 
@@ -168,20 +190,20 @@ VITE_NATIVE_API_BASE_URL=http://192.168.1.100:8080
 
 ## 常用命令
 
-| 命令 | 说明 |
-| --- | --- |
-| `npm run dev:h5` | 启动 H5 开发环境 |
-| `npm run dev:mp-weixin` | 构建并监听微信小程序 |
-| `npm run dev:app` | 构建并监听 App 资源 |
-| `npm run type-check` | 执行 Vue 与 TypeScript 类型检查 |
-| `npm run build:h5` | 构建生产 H5 |
-| `npm run build:mp-weixin` | 构建生产微信小程序 |
-| `npm run build:app` | 构建生产 App 资源 |
-| `npm run lint` | 运行 ESLint 检查 |
-| `npm run lint:fix` | 自动修复 ESLint 问题 |
-| `npm run format` | Prettier 格式化代码 |
-| `npm run test:run` | 运行单元测试 |
-| `npm run test:coverage` | 运行测试并生成覆盖率报告 |
+| 命令                      | 说明                            |
+| ------------------------- | ------------------------------- |
+| `npm run dev:h5`          | 启动 H5 开发环境                |
+| `npm run dev:mp-weixin`   | 构建并监听微信小程序            |
+| `npm run dev:app`         | 构建并监听 App 资源             |
+| `npm run type-check`      | 执行 Vue 与 TypeScript 类型检查 |
+| `npm run build:h5`        | 构建生产 H5                     |
+| `npm run build:mp-weixin` | 构建生产微信小程序              |
+| `npm run build:app`       | 构建生产 App 资源               |
+| `npm run lint`            | 运行 ESLint 检查                |
+| `npm run lint:fix`        | 自动修复 ESLint 问题            |
+| `npm run format`          | Prettier 格式化代码             |
+| `npm run test:run`        | 运行单元测试                    |
+| `npm run test:coverage`   | 运行测试并生成覆盖率报告        |
 
 其他平台脚本可在 `package.json` 中查看。主要生产产物位于：
 
@@ -196,7 +218,7 @@ dist/build/app
 ```text
 src/
 ├── api/                    # 按领域划分的 API 接口
-│   ├── auth/               # 登录、Token 刷新
+│   ├── system/             # 登录、组织配置/核验、当前会话与用户权限
 │   ├── inventory/          # 库存查询与扫码
 │   ├── production/         # 生产订单、领料、成品入库接口
 │   ├── purchase/           # 采购入库接口
@@ -207,9 +229,11 @@ src/
 │   ├── production-picking/ # 生产领料列表与确认
 │   ├── production-inbound/ # 成品入库列表与确认
 │   ├── production-order/   # 生产订单列表与操作
+│   ├── production-report/  # 报工登记、列表、详情与审批
 │   ├── sales-outbound/     # 销售出库列表与确认
 │   └── sales-order/        # 销售订单列表与详情
 ├── config/                 # API 地址和请求超时配置
+├── components/organization/ # 组织选择、切换与未开放状态
 ├── constants/              # 能力配置、领域枚举、存储键
 ├── core/                   # 核心基础设施
 │   ├── api/                # 错误模型、请求序列号
@@ -219,13 +243,14 @@ src/
 │   ├── login/              # 登录页
 │   ├── workbench/          # 权限工作台
 │   ├── profile/            # 个人中心
-│   └── feature/            # 扫码承接页
+│   ├── feature/            # 功能目录
+│   └── scan/               # 扫码与手工输入承接页
 ├── shared/                 # 共享层
 │   ├── composables/        # useListState 等通用组合式函数
 │   ├── components/         # OfflineBanner 等通用组件
 │   └── types/              # AsyncState 等共享类型
 ├── static/                 # Logo、背景和 TabBar 图标
-├── stores/                 # Pinia 状态（用户、工作台）
+├── stores/                 # Pinia 状态（用户、组织、工作台）
 ├── types/                  # 业务类型定义
 │   ├── api.ts              # 统一响应、错误类型、ID 类型
 │   ├── inventory/          # 库存类型
@@ -256,13 +281,14 @@ src/
 业务代码通过统一请求方法访问 API：
 
 ```ts
-import { post } from "@/utils/request";
+import { post } from '@/utils/request';
 
 const result = await post<{ token: string }>(
-  "/auth/login",
+  '/auth/login',
   {
-    username: "admin",
-    password: "******",
+    tenantCode: 'company-a',
+    username: 'your-account',
+    password: '******',
   },
   { auth: false },
 );
@@ -278,12 +304,12 @@ Authorization: Bearer <token>
 
 所有异步数据遵循统一的 `AsyncStatus` 模型：
 
-| 状态 | 含义 | UI 表现 |
-| --- | --- | --- |
-| `idle` | 尚未请求 | 无内容 |
-| `loading` | 首次加载中 | 加载提示 |
-| `ready` | 数据就绪 | 列表 / 详情 / 空状态 |
-| `error` | 请求失败 | 错误信息 + 重试按钮 |
+| 状态      | 含义       | UI 表现              |
+| --------- | ---------- | -------------------- |
+| `idle`    | 尚未请求   | 无内容               |
+| `loading` | 首次加载中 | 加载提示             |
+| `ready`   | 数据就绪   | 列表 / 详情 / 空状态 |
+| `error`   | 请求失败   | 错误信息 + 重试按钮  |
 
 列表页使用 `useListState` 组合式函数，额外支持分页、刷新、加载更多等能力。每个业务页面必须覆盖 loading / empty / error / success 四种状态。
 
@@ -309,6 +335,11 @@ npm run test:coverage
 - useListState 列表状态管理（分页、刷新、空状态、错误恢复）
 - useRequestSequence 请求序列追踪与 AbortController
 - 连通性检测与弱网下写操作重试规则
+- 组织核验顺序、single 默认组织与同用户 ID 的组织会话切换
+- 旧组织晚到的 200/401、用户/权限数据隔离及仓库上下文清理
+- 生产作业权限、状态流转、数量校验与防重复提交
+
+最近一次验证（2026-11-03）：117 项单元测试、类型检查和 H5 生产构建通过；H5 登录在 320×568、320×640、390×844、430×932 四种视口下测量无页面滚动溢出，三个输入框和登录按钮均可见，包含组织核验错误状态。App/小程序的软键盘、安全区及系统字体仍需按目标设备真机验收，H5 截图不替代原生端验收。
 
 ## 开发规范
 
