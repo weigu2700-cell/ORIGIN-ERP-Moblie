@@ -5,7 +5,10 @@ import 'theme.dart';
 /// 原点智造标志：与 Web 管理端 origin-logo.svg 相同的几何图形（64×64 视口）。
 class OriginLogo extends StatelessWidget {
   final double size;
-  const OriginLogo({super.key, this.size = 32});
+
+  /// 深色背景上使用较亮的六边形底色，避免与背景融在一起。
+  final bool onDark;
+  const OriginLogo({super.key, this.size = 32, this.onDark = false});
   @override
   Widget build(BuildContext context) => Semantics(
     label: '原点智造',
@@ -13,12 +16,14 @@ class OriginLogo extends StatelessWidget {
     child: SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(painter: _LogoPainter()),
+      child: CustomPaint(painter: _LogoPainter(onDark)),
     ),
   );
 }
 
 class _LogoPainter extends CustomPainter {
+  final bool onDark;
+  _LogoPainter(this.onDark);
   @override
   void paint(Canvas canvas, Size size) {
     canvas.scale(size.width / 64, size.height / 64);
@@ -31,7 +36,7 @@ class _LogoPainter extends CustomPainter {
         ..lineTo(9, 46)
         ..lineTo(9, 18)
         ..close(),
-      Paint()..color = AppTokens.brandMark,
+      Paint()..color = onDark ? const Color(0xFF3A6D8A) : AppTokens.brandMark,
     );
     final amber = Paint()
       ..color = AppTokens.accent
@@ -79,5 +84,5 @@ class _LogoPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_LogoPainter old) => false;
+  bool shouldRepaint(_LogoPainter old) => old.onDark != onDark;
 }

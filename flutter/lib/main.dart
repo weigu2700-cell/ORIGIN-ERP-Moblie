@@ -13,6 +13,7 @@ import 'features/login.dart';
 import 'features/messages.dart';
 import 'features/scan.dart';
 import 'features/workspace.dart';
+import 'ui/brand.dart';
 import 'ui/common.dart';
 import 'ui/theme.dart';
 
@@ -83,11 +84,7 @@ class _RoutedAppState extends State<_RoutedApp> {
         return null;
       },
       routes: [
-        GoRoute(
-          path: '/startup',
-          builder: (_, _) =>
-              const Scaffold(body: Center(child: CircularProgressIndicator())),
-        ),
+        GoRoute(path: '/startup', builder: (_, _) => const StartupScreen()),
         GoRoute(path: '/login', builder: (_, _) => LoginPage(session)),
         GoRoute(
           path: '/session-error',
@@ -292,4 +289,54 @@ class WorkspaceShell extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 首屏：与原生启动画面同底色、同位置的标志，恢复登录态期间显示。
+class StartupScreen extends StatelessWidget {
+  const StartupScreen({super.key});
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppTokens.brandDeep,
+    body: Stack(
+      children: [
+        const Center(child: OriginLogo(size: 120, onDark: true)),
+        // 标志位置与原生启动画面一致，文字与加载圈放在标志下方。
+        Align(
+          alignment: const Alignment(0, 0.42),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '原点智造',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'ORIGIN ERP',
+                style: TextStyle(
+                  fontSize: 11,
+                  letterSpacing: 2,
+                  fontWeight: FontWeight.w600,
+                  color: AppTokens.accent,
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white.withValues(alpha: 0.5),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 }

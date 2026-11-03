@@ -277,7 +277,7 @@ class _LoginHero extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const OriginLogo(size: 52),
+              const OriginLogo(size: 52, onDark: true),
               const SizedBox(height: 18),
               const Text(
                 'ORIGIN ERP · 移动作业',
