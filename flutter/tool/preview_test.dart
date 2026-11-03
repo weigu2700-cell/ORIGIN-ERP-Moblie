@@ -8,8 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:origin_mobile/main.dart';
+import 'package:origin_mobile/ui/theme.dart';
 
 import '../test/support/fakes.dart';
+import 'readme_boards.dart';
 
 void main() {
   testWidgets('导出工作台预览', (tester) async {
@@ -27,13 +29,26 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.runAsync(() async {
-      final systemFont = File('/System/Library/Fonts/STHeiti Light.ttc');
+      final systemFont = File(
+        Platform.environment['PREVIEW_FONT'] ??
+            '/System/Library/Fonts/STHeiti Light.ttc',
+      );
+      if (!await systemFont.exists()) {
+        throw StateError('预览需要中文字体，请设置 PREVIEW_FONT 为本机中文字体路径');
+      }
       if (await systemFont.exists()) {
-        final loader = FontLoader('Roboto')
-          ..addFont(
-            Future.value(ByteData.sublistView(await systemFont.readAsBytes())),
-          );
-        await loader.load();
+        final bytes = ByteData.sublistView(await systemFont.readAsBytes());
+        for (final family in [
+          'Roboto',
+          'Ahem',
+          '.AppleSystemUIFont',
+          'CupertinoSystemText',
+          'CupertinoSystemDisplay',
+          'ReadmeFont',
+        ]) {
+          final loader = FontLoader(family)..addFont(Future.value(bytes));
+          await loader.load();
+        }
       }
       final iconFont = File(
         'build/unit_test_assets/fonts/MaterialIcons-Regular.otf',
@@ -63,8 +78,20 @@ void main() {
     );
     final session = authenticatedSession(api);
     final key = GlobalKey();
+    // AppBar 的独立标题样式没有字体继承；仅预览注入已加载的中文字体。
+    final theme = AppTokens.theme;
+    final previewTheme = theme.copyWith(
+      appBarTheme: theme.appBarTheme.copyWith(
+        titleTextStyle: theme.appBarTheme.titleTextStyle?.copyWith(
+          fontFamily: 'Roboto',
+        ),
+      ),
+    );
     await tester.pumpWidget(
-      RepaintBoundary(key: key, child: OriginApp(session)),
+      RepaintBoundary(
+        key: key,
+        child: OriginApp(session, theme: previewTheme),
+      ),
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
@@ -72,7 +99,7 @@ void main() {
       final boundary =
           key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
       await tester.runAsync(() async {
-        final image = await boundary.toImage(pixelRatio: 1);
+        final image = await boundary.toImage(pixelRatio: 2);
         final data = await image.toByteData(format: ui.ImageByteFormat.png);
         final file = File('output/preview${ios ? '-ios' : ''}/$name.png');
         await file.parent.create(recursive: true);
@@ -143,6 +170,7 @@ void main() {
     await session.logout();
     await tester.pumpAndSettle();
     await shot('login');
+    await tester.runAsync(() => renderReadmeBoards(ios: ios));
     expect(base, isNull);
     await tester.pumpWidget(const SizedBox());
     session.dispose();

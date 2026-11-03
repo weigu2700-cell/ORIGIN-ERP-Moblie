@@ -99,10 +99,15 @@ class OrgTitle extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.center,
     children: [
-      Text(title),
+      Text(title, style: const TextStyle(height: 1.25)),
       Text(
         session.organization['name']?.toString() ?? '',
-        style: const TextStyle(fontSize: 12, color: AppTokens.muted),
+        style: const TextStyle(
+          fontSize: 11,
+          height: 1.3,
+          fontWeight: FontWeight.w400,
+          color: AppTokens.muted,
+        ),
       ),
     ],
   );
@@ -240,7 +245,7 @@ class SectionHeading extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -280,7 +285,7 @@ AppBar organizationBar(BuildContext context, Session session) => AppBar(
   toolbarHeight: MediaQuery.textScalerOf(context).scale(20) + 36,
   automaticallyImplyLeading: false,
   centerTitle: false,
-  backgroundColor: Colors.white,
+  backgroundColor: AppTokens.canvas,
   titleSpacing: 20,
   title: InkWell(
     onTap: () async {
@@ -344,8 +349,4 @@ AppBar organizationBar(BuildContext context, Session session) => AppBar(
     ),
     const SizedBox(width: 8),
   ],
-  bottom: const PreferredSize(
-    preferredSize: Size.fromHeight(1),
-    child: Divider(),
-  ),
 );

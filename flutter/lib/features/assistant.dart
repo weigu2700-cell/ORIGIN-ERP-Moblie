@@ -658,9 +658,12 @@ class _ChatViewState extends State<ChatView> with WidgetsBindingObserver {
                           color: AppTokens.brand,
                         ),
                         const SizedBox(height: 12),
-                        Text(
+                        const Text(
                           '有什么可以帮你？',
-                          style: Theme.of(context).textTheme.titleLarge,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         const Text(
@@ -723,7 +726,7 @@ class _ChatViewState extends State<ChatView> with WidgetsBindingObserver {
           const Padding(padding: EdgeInsets.all(20), child: Text('此会话已归档，只可阅读'))
         else
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [

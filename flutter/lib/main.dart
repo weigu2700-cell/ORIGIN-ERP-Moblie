@@ -29,12 +29,14 @@ void main() {
 
 class OriginApp extends StatelessWidget {
   final Session session;
-  const OriginApp(this.session, {super.key});
+  final ThemeData? theme;
+  const OriginApp(this.session, {super.key, this.theme});
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: session,
     builder: (_, _) => _RoutedApp(
       session,
+      theme: theme,
       key: ValueKey('${session.api.generation}:${session.status.name}'),
     ),
   );
@@ -42,7 +44,8 @@ class OriginApp extends StatelessWidget {
 
 class _RoutedApp extends StatefulWidget {
   final Session session;
-  const _RoutedApp(this.session, {super.key});
+  final ThemeData? theme;
+  const _RoutedApp(this.session, {super.key, this.theme});
   @override
   State<_RoutedApp> createState() => _RoutedAppState();
 }
@@ -207,7 +210,7 @@ class _RoutedAppState extends State<_RoutedApp> {
     routerConfig: router,
     title: '原点智造',
     debugShowCheckedModeBanner: false,
-    theme: AppTokens.theme,
+    theme: widget.theme ?? AppTokens.theme,
     // 横屏时避开灵动岛/刘海的左右安全区；上下由 AppBar、底栏各自处理。
     builder: (context, child) =>
         SafeArea(top: false, bottom: false, child: child!),
@@ -261,9 +264,9 @@ class WorkspaceShell extends StatelessWidget {
               borderRadius: BorderRadius.circular(32),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x1A000000),
-                  blurRadius: 20,
-                  offset: Offset(0, 6),
+                  color: Color(0x14000000),
+                  blurRadius: 24,
+                  offset: Offset(0, 4),
                 ),
               ],
             ),

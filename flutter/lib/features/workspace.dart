@@ -244,6 +244,7 @@ class _WorkspacePageState extends State<WorkspacePage> {
                     ),
                     for (final order in production)
                       TaskRow(
+                        last: order == production.last,
                         specFor('orders'),
                         order,
                         onTap: () =>
@@ -335,7 +336,14 @@ class TaskRow extends StatelessWidget {
   final DocSpec spec;
   final Json data;
   final VoidCallback onTap;
-  const TaskRow(this.spec, this.data, {super.key, required this.onTap});
+  final bool last;
+  const TaskRow(
+    this.spec,
+    this.data, {
+    super.key,
+    required this.onTap,
+    this.last = false,
+  });
   @override
   Widget build(BuildContext context) {
     final color = appColor(spec.key);
@@ -352,8 +360,10 @@ class TaskRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: AppTokens.line)),
+            decoration: BoxDecoration(
+              border: last
+                  ? null
+                  : const Border(bottom: BorderSide(color: AppTokens.line)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -551,13 +561,12 @@ class ProfilePage extends StatelessWidget {
       body: ListView(
         children: [
           Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
             child: Row(
               children: [
                 Container(
-                  width: 60,
-                  height: 60,
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
                     color: const Color(0xFFE4EAF6),
                     borderRadius: BorderRadius.circular(16),

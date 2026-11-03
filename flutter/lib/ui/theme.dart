@@ -26,7 +26,7 @@ class AppTokens {
     textTheme: const TextTheme(
       bodyMedium: TextStyle(fontSize: 15, color: ink),
       titleLarge: TextStyle(
-        fontSize: 28,
+        fontSize: 22,
         letterSpacing: 0.2,
         fontWeight: FontWeight.w700,
         color: ink,
