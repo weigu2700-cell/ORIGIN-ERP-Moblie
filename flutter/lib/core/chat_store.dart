@@ -326,7 +326,10 @@ class ChatStore extends ChangeNotifier {
 
   void close() {
     activeId = null;
-    notifyListeners();
+    // 多由页面 dispose 触发，此时组件树已锁定，下一个微任务再通知。
+    scheduleMicrotask(() {
+      if (activeId == null) notifyListeners();
+    });
   }
 
   Future<void> loadOlder(String id) async {

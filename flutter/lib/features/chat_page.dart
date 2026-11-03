@@ -47,6 +47,9 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> open() async {
+    // initState 内不能通知监听者（会在构建期触发重建），让出一个微任务。
+    await Future<void>.value();
+    if (!mounted) return;
     try {
       await chat.open(widget.id);
     } catch (e) {

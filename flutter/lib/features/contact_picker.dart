@@ -217,7 +217,7 @@ class _ContactPickerPageState extends State<ContactPickerPage> {
                             ),
                           ),
                         ),
-                        Container(
+                        Material(
                           color: Colors.white,
                           child: Column(
                             children: [
@@ -430,7 +430,7 @@ class _ContactsPageState extends State<ContactsPage> {
                             ),
                           ),
                         ),
-                        Container(
+                        Material(
                           color: Colors.white,
                           child: Column(
                             children: [
