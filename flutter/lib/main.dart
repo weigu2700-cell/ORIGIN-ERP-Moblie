@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
@@ -6,7 +7,11 @@ import 'package:go_router/go_router.dart';
 import 'core/api.dart';
 import 'core/session.dart';
 import 'domain/documents.dart';
+import 'core/chat_store.dart';
 import 'features/assistant.dart';
+import 'features/chat_info.dart';
+import 'features/chat_page.dart';
+import 'features/contact_picker.dart';
 import 'features/document_list.dart';
 import 'features/document_detail.dart';
 import 'features/login.dart';
@@ -31,13 +36,17 @@ void main() {
 class OriginApp extends StatelessWidget {
   final Session session;
   final ThemeData? theme;
-  const OriginApp(this.session, {super.key, this.theme});
+
+  /// 测试可注入聊天状态（使用 Mock 或空实现），避免连接真实 WebSocket。
+  final ChatStore Function(Session)? chatFactory;
+  const OriginApp(this.session, {super.key, this.theme, this.chatFactory});
   @override
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: session,
     builder: (_, _) => _RoutedApp(
       session,
       theme: theme,
+      chatFactory: chatFactory,
       key: ValueKey('${session.api.generation}:${session.status.name}'),
     ),
   );
@@ -46,13 +55,16 @@ class OriginApp extends StatelessWidget {
 class _RoutedApp extends StatefulWidget {
   final Session session;
   final ThemeData? theme;
-  const _RoutedApp(this.session, {super.key, this.theme});
+  final ChatStore Function(Session)? chatFactory;
+  const _RoutedApp(this.session, {super.key, this.theme, this.chatFactory});
   @override
   State<_RoutedApp> createState() => _RoutedAppState();
 }
 
-class _RoutedAppState extends State<_RoutedApp> {
+class _RoutedAppState extends State<_RoutedApp> with WidgetsBindingObserver {
   late final GoRouter router;
+  late final ChatStore chat =
+      widget.chatFactory?.call(widget.session) ?? ChatStore(widget.session);
   final root = GlobalKey<NavigatorState>();
   Session get session => widget.session;
   String get landing => switch (session.status) {
@@ -65,6 +77,11 @@ class _RoutedAppState extends State<_RoutedApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    if (session.status == SessionStatus.authenticated &&
+        session.businessAvailable) {
+      unawaited(chat.bootstrap());
+    }
     router = GoRouter(
       navigatorKey: root,
       initialLocation: landing,
@@ -120,18 +137,57 @@ class _RoutedAppState extends State<_RoutedApp> {
               ScanPage(expected: state.uri.queryParameters['expected']),
         ),
         StatefulShellRoute.indexedStack(
-          builder: (_, _, shell) => WorkspaceShell(shell),
+          builder: (_, _, shell) => WorkspaceShell(shell, chat),
           branches: [
             StatefulShellBranch(
               routes: [
                 GoRoute(
                   path: '/messages',
-                  builder: (_, _) => MessagesPage(session),
+                  builder: (_, _) => MessagesPage(session, chat),
                   routes: [
                     GoRoute(
                       path: 'system',
                       parentNavigatorKey: root,
                       builder: (_, _) => SystemNotificationsPage(session),
+                    ),
+                    GoRoute(
+                      path: 'chat/:id',
+                      parentNavigatorKey: root,
+                      builder: (_, state) =>
+                          ChatPage(chat, state.pathParameters['id']!),
+                      routes: [
+                        GoRoute(
+                          path: 'info',
+                          parentNavigatorKey: root,
+                          builder: (_, state) =>
+                              ChatInfoPage(chat, state.pathParameters['id']!),
+                        ),
+                        GoRoute(
+                          path: 'add',
+                          parentNavigatorKey: root,
+                          builder: (_, state) => ContactPickerPage(
+                            chat,
+                            PickMode.add,
+                            conversationId: state.pathParameters['id'],
+                          ),
+                        ),
+                      ],
+                    ),
+                    GoRoute(
+                      path: 'contacts',
+                      parentNavigatorKey: root,
+                      builder: (_, _) => ContactsPage(chat),
+                    ),
+                    GoRoute(
+                      path: 'new',
+                      parentNavigatorKey: root,
+                      builder: (_, state) => ContactPickerPage(
+                        chat,
+                        state.uri.queryParameters['mode'] == 'group'
+                            ? PickMode.group
+                            : PickMode.direct,
+                        preselect: state.uri.queryParameters['with'],
+                      ),
                     ),
                   ],
                 ),
@@ -197,8 +253,15 @@ class _RoutedAppState extends State<_RoutedApp> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) chat.resume();
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     router.dispose();
+    chat.dispose();
     super.dispose();
   }
 
@@ -219,7 +282,8 @@ class _RoutedAppState extends State<_RoutedApp> {
 
 class WorkspaceShell extends StatelessWidget {
   final StatefulNavigationShell shell;
-  const WorkspaceShell(this.shell, {super.key});
+  final ChatStore chat;
+  const WorkspaceShell(this.shell, this.chat, {super.key});
 
   static const _items = [
     (Icons.chat_bubble_outline, Icons.chat_bubble, '消息'),
@@ -227,6 +291,18 @@ class WorkspaceShell extends StatelessWidget {
     (Icons.auto_awesome_outlined, Icons.auto_awesome, 'AI助手'),
     (Icons.person_outline, Icons.person, '我的'),
   ];
+
+  /// 「消息」标签显示员工聊天的未读数（静音会话不计入）。
+  Widget _tabIcon(int index, IconData icon) => index == 0
+      ? ListenableBuilder(
+          listenable: chat,
+          builder: (_, _) => Badge(
+            isLabelVisible: chat.unreadTotal > 0,
+            label: Text(chat.unreadTotal > 99 ? '99+' : '${chat.unreadTotal}'),
+            child: Icon(icon),
+          ),
+        )
+      : Icon(icon);
 
   @override
   Widget build(BuildContext context) {
@@ -239,11 +315,11 @@ class WorkspaceShell extends StatelessWidget {
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       destinations: [
-        for (final item in _items)
+        for (var i = 0; i < _items.length; i++)
           NavigationDestination(
-            icon: Icon(item.$1),
-            selectedIcon: Icon(item.$2),
-            label: item.$3,
+            icon: _tabIcon(i, _items[i].$1),
+            selectedIcon: _tabIcon(i, _items[i].$2),
+            label: _items[i].$3,
           ),
       ],
     );

@@ -2,18 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/api.dart';
+import '../core/chat_socket.dart';
+import '../core/chat_store.dart';
 import '../core/session.dart';
+import '../domain/chat_format.dart';
 import '../domain/notification_targets.dart';
+import '../ui/cards.dart';
 import '../ui/common.dart';
+import 'chat_widgets.dart';
 import '../ui/theme.dart';
 import 'workspace.dart' show appColor, appIcon;
 
 const _notificationBlue = AppTokens.brand;
 
-/// 消息 Tab：会话列表。目前只有一个「系统通知」会话，后续可在此追加其他会话。
+/// 消息 Tab：会话列表。「系统通知」固定置顶，其后是员工单聊与群聊；通讯录在此页内。
 class MessagesPage extends StatefulWidget {
   final Session session;
-  const MessagesPage(this.session, {super.key});
+  final ChatStore chat;
+  const MessagesPage(this.session, this.chat, {super.key});
   @override
   State<MessagesPage> createState() => _MessagesPageState();
 }
@@ -60,56 +66,188 @@ class _MessagesPageState extends State<MessagesPage> {
     if (mounted) load();
   }
 
+  void startMenu() => showModalBottomSheet<void>(
+    context: context,
+    showDragHandle: true,
+    builder: (c) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.person_outline, color: AppTokens.brand),
+            title: const Text('发起单聊'),
+            subtitle: const Text('与同组织的一位员工'),
+            onTap: () {
+              Navigator.pop(c);
+              context.push('/messages/new?mode=direct');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.groups_outlined, color: AppTokens.brand),
+            title: const Text('创建群聊'),
+            subtitle: const Text('3～200 人'),
+            onTap: () {
+              Navigator.pop(c);
+              context.push('/messages/new?mode=group');
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: organizationBar(context, widget.session),
-    body: RefreshIndicator(
-      onRefresh: load,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-            child: Text('消息', style: Theme.of(context).textTheme.titleLarge),
-          ),
-          if (loading)
-            const Padding(
-              padding: EdgeInsets.only(top: 80),
-              child: Center(child: CircularProgressIndicator.adaptive()),
-            )
-          else if (error != null && latest == null)
-            StateNotice(error.toString(), retry: load)
-          else
-            Container(
-              color: Colors.white,
-              child: _ConversationTile(
-                title: '系统通知',
-                preview: latest == null
-                    ? '暂无通知'
-                    : '${latest!['title'] ?? ''}：${latest!['content'] ?? ''}',
-                time: latest == null
-                    ? ''
-                    : notificationTime(context, latest!['createTime']),
-                unread: unread,
-                onTap: openSystem,
+    body: ListenableBuilder(
+      listenable: widget.chat,
+      builder: (context, _) {
+        final chat = widget.chat;
+        return RefreshIndicator(
+          onRefresh: () async {
+            await load();
+            if (chat.ready) await chat.sync();
+          },
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.only(bottom: 110),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '消息',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: '通讯录',
+                      onPressed: chat.ready
+                          ? () => context.push('/messages/contacts')
+                          : null,
+                      icon: const Icon(Icons.contacts_outlined),
+                    ),
+                    IconButton.filled(
+                      tooltip: '发起聊天',
+                      onPressed: chat.ready ? startMenu : null,
+                      icon: const Icon(Icons.add),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                ),
               ),
-            ),
-        ],
-      ),
+              if (chat.connection == ChatConnection.offline ||
+                  chat.connection == ChatConnection.reconnecting)
+                Container(
+                  color: chat.connection == ChatConnection.offline
+                      ? const Color(0xFFF7DCDC)
+                      : const Color(0xFFFBF0D9),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 6,
+                  ),
+                  child: Text(
+                    chat.connection == ChatConnection.offline
+                        ? '网络已断开，恢复后自动补拉'
+                        : '正在重新连接…',
+                    style: const TextStyle(fontSize: 12.5),
+                  ),
+                ),
+              if (loading)
+                const Padding(
+                  padding: EdgeInsets.only(top: 80),
+                  child: Center(child: CircularProgressIndicator.adaptive()),
+                )
+              else if (error != null && latest == null)
+                StateNotice(error.toString(), retry: load)
+              else
+                Container(
+                  color: Colors.white,
+                  child: Column(
+                    children: [
+                      _ConversationTile(
+                        leading: const ChatAvatar(system: true, size: 52),
+                        title: '系统通知',
+                        preview: latest == null
+                            ? '暂无通知'
+                            : '${latest!['title'] ?? ''}：${latest!['content'] ?? ''}',
+                        time: latest == null
+                            ? ''
+                            : notificationTime(context, latest!['createTime']),
+                        unread: unread,
+                        onTap: openSystem,
+                      ),
+                      for (final c in chat.list)
+                        _ConversationTile(
+                          leading: ChatAvatar(
+                            name: c.name,
+                            userId: c.peerUserId ?? '',
+                            group: c.isGroup,
+                            dissolved: c.dissolved,
+                            size: 52,
+                          ),
+                          title: c.name,
+                          tag: c.dissolved ? '已解散' : null,
+                          preview: previewOf(
+                            c.lastMessage,
+                            chat.nameOf,
+                            c.isGroup,
+                          ),
+                          time: listTime(c.activity),
+                          unread: c.unreadCount,
+                          muted: c.muted,
+                          onTap: () => context.push('/messages/chat/${c.id}'),
+                        ),
+                    ],
+                  ),
+                ),
+              if (chat.disabledReason != null)
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    chat.disabledReason!,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppTokens.muted,
+                      fontSize: 13,
+                    ),
+                  ),
+                )
+              else if (chat.ready && chat.list.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(28),
+                  child: Text(
+                    '还没有聊天，点右上角 + 发起单聊或创建群聊',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: AppTokens.muted, fontSize: 13),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     ),
   );
 }
 
 class _ConversationTile extends StatelessWidget {
+  final Widget leading;
   final String title, preview, time;
+  final String? tag;
   final int unread;
+  final bool muted;
   final VoidCallback onTap;
   const _ConversationTile({
+    required this.leading,
     required this.title,
     required this.preview,
     required this.time,
     required this.unread,
     required this.onTap,
+    this.tag,
+    this.muted = false,
   });
   @override
   Widget build(BuildContext context) => Semantics(
@@ -123,26 +261,10 @@ class _ConversationTile extends StatelessWidget {
         child: Row(
           children: [
             Badge(
-              isLabelVisible: unread > 0,
+              isLabelVisible: unread > 0 && !muted,
               label: Text(unread > 99 ? '99+' : '$unread'),
               backgroundColor: const Color(0xFFE5484D),
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF3C7C9C), AppTokens.brandDeep],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.notifications_active,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
+              child: leading,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -152,14 +274,27 @@ class _ConversationTile extends StatelessWidget {
                   Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            if (tag != null) ...[
+                              const SizedBox(width: 6),
+                              StatusPill(tag!, tone: Tone.neutral),
+                            ],
+                          ],
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         time,
                         style: const TextStyle(
@@ -170,14 +305,50 @@ class _ConversationTile extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    preview,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppTokens.muted,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          preview,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppTokens.muted,
+                          ),
+                        ),
+                      ),
+                      if (muted) ...[
+                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.notifications_off_outlined,
+                          size: 15,
+                          color: Color(0xFF9AA8B0),
+                        ),
+                        if (unread > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFB7C3CA),
+                                borderRadius: BorderRadius.circular(9),
+                              ),
+                              child: Text(
+                                '$unread',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ],
                   ),
                 ],
               ),

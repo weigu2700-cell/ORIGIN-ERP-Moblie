@@ -6,7 +6,15 @@ class ApiFailure implements Exception {
   final String message;
   final int? code;
   final bool unknownResult;
-  const ApiFailure(this.message, {this.code, this.unknownResult = false});
+
+  /// 聊天等模块的领域错误码（响应 data.error），如 VERSION_CONFLICT。
+  final String? error;
+  const ApiFailure(
+    this.message, {
+    this.code,
+    this.unknownResult = false,
+    this.error,
+  });
   @override
   String toString() => message;
 }
@@ -117,6 +125,9 @@ class ApiClient {
           payload is Map ? (payload['msg'] ?? '请求失败').toString() : '服务响应异常',
           code: code is int ? code : status,
           unknownResult: write && status >= 500,
+          error: payload is Map && payload['data'] is Map
+              ? (payload['data'] as Map)['error']?.toString()
+              : null,
         );
       }
       if (payload is! Map || !payload.containsKey('data')) {
@@ -132,6 +143,70 @@ class ApiClient {
         unknown ? '执行结果未知，请先回查单据，勿重复提交' : connectionMessage(error),
         unknownResult: unknown,
       );
+    } finally {
+      _requests.remove(cancel);
+    }
+  }
+
+  /// 签名 URL 直传：不带应用 JWT，只带服务端返回的请求头。
+  Future<void> putSigned(
+    String url,
+    Map<String, String> headers,
+    Stream<List<int>> data,
+    int length, {
+    void Function(int sent, int total)? onProgress,
+    CancelToken? cancel,
+  }) async {
+    final ticket = generation;
+    final token = cancel ?? CancelToken();
+    _requests.add(token);
+    try {
+      final response = await Dio(BaseOptions(validateStatus: (_) => true))
+          .putUri<dynamic>(
+            Uri.parse(url),
+            data: data,
+            cancelToken: token,
+            onSendProgress: onProgress,
+            options: Options(headers: {...headers, 'Content-Length': length}),
+          );
+      check(ticket);
+      final status = response.statusCode ?? 0;
+      if (status < 200 || status >= 300) {
+        throw ApiFailure('文件上传失败（HTTP $status）', code: status);
+      }
+    } on DioException catch (error) {
+      check(ticket);
+      if (CancelToken.isCancel(error)) rethrow;
+      throw ApiFailure(connectionMessage(error));
+    } finally {
+      _requests.remove(token);
+    }
+  }
+
+  /// 鉴权下载二进制内容（聊天附件）。
+  Future<List<int>> downloadBytes(String path) async {
+    final ticket = generation;
+    final cancel = CancelToken();
+    _requests.add(cancel);
+    try {
+      final response = await _dio.requestUri<List<int>>(
+        uri(path, const {}),
+        cancelToken: cancel,
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {if (token != null) 'Authorization': 'Bearer $token'},
+          receiveTimeout: const Duration(minutes: 5),
+        ),
+      );
+      check(ticket);
+      final status = response.statusCode ?? 0;
+      if (status < 200 || status >= 300) {
+        throw ApiFailure('下载失败（HTTP $status）', code: status);
+      }
+      return response.data ?? const [];
+    } on DioException catch (error) {
+      check(ticket);
+      throw ApiFailure(connectionMessage(error));
     } finally {
       _requests.remove(cancel);
     }

@@ -17,7 +17,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
       final session = authenticatedSession(FixtureApi());
-      await tester.pumpWidget(OriginApp(session));
+      await tester.pumpWidget(OriginApp(session, chatFactory: testChat));
       await tester.pumpAndSettle();
       expect(find.text('搜索应用'), findsOneWidget);
       expect(find.text('库存查询'), findsOneWidget);
@@ -29,7 +29,7 @@ void main() {
 
   testWidgets('退出销毁已打开的库存查询页面', (tester) async {
     final session = authenticatedSession(FixtureApi());
-    await tester.pumpWidget(OriginApp(session));
+    await tester.pumpWidget(OriginApp(session, chatFactory: testChat));
     await tester.pumpAndSettle();
     await tester.tap(find.text('库存查询'));
     await tester.pumpAndSettle();

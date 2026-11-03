@@ -1,4 +1,6 @@
 import 'package:origin_mobile/core/api.dart';
+import 'package:origin_mobile/core/chat_mock.dart';
+import 'package:origin_mobile/core/chat_store.dart';
 import 'package:origin_mobile/core/session.dart';
 
 class MemoryVault implements TokenVault {
@@ -209,3 +211,7 @@ Session authenticatedSession(FixtureApi api) => Session(api, MemoryVault())
       {'roleCode': 'ADMIN', 'roleName': '管理员'},
     ],
   };
+
+/// 页面测试使用内存聊天，不连接 WebSocket。
+ChatStore testChat(Session session) =>
+    ChatStore(session, api: MockChatApi(delay: Duration.zero));

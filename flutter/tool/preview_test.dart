@@ -90,7 +90,7 @@ void main() {
     await tester.pumpWidget(
       RepaintBoundary(
         key: key,
-        child: OriginApp(session, theme: previewTheme),
+        child: OriginApp(session, theme: previewTheme, chatFactory: testChat),
       ),
     );
     await tester.pumpAndSettle();

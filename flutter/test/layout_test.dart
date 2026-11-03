@@ -16,7 +16,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       final session = Session(FixtureApi(), MemoryVault())
         ..status = SessionStatus.authenticated;
-      await tester.pumpWidget(OriginApp(session));
+      await tester.pumpWidget(OriginApp(session, chatFactory: testChat));
       await tester.pumpAndSettle();
       expect(find.text('组织业务尚未开放'), findsOneWidget);
       expect(find.text('退出并切换组织'), findsOneWidget);
