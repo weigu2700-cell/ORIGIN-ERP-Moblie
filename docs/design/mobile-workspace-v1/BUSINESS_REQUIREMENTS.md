@@ -113,4 +113,3 @@
 
 P0 设计评审与关键状态补齐 → P1 Flutter 工程/身份/组织/权限 → P2 工作空间、查询与 AI → P3 领料/报工/入出库闭环 → P4 两端真机与发布验收。
 
-现有移动业务依据：[生产闭环](../../production-mobile.md)、[移动业务逻辑](../../mobile-logic-solution.md)、[Flutter 准备计划](../../flutter-rebuild-plan.md)。旧平台说明只作业务参考，不能照搬页面或平台插件。
