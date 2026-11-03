@@ -1,6 +1,0 @@
-{
-  "navigationBarTitleText": "业务功能",
-  "usingComponents": {
-    "wd-icon": "../../node-modules/wot-design-uni/components/wd-icon/wd-icon"
-  }
-}

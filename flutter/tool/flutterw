@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+workspace_sdk="$(cd "$(dirname "$0")/../../.." && pwd)/.tooling/flutter"
+if [[ -n "${FLUTTER_ROOT:-}" && -x "$FLUTTER_ROOT/bin/flutter" ]]; then
+  sdk="$FLUTTER_ROOT"
+elif [[ -x "$workspace_sdk/bin/flutter" ]]; then
+  sdk="$workspace_sdk"
+elif command -v flutter >/dev/null 2>&1; then
+  if [[ "${1:-}" == "--format-dart" ]]; then shift; exec dart format "$@"; fi
+  exec flutter "$@"
+else
+  echo '未找到 Flutter SDK。请设置 FLUTTER_ROOT 或将 SDK 安装到工作区 .tooling/flutter。' >&2
+  exit 1
+fi
+export PATH="$sdk/bin:$PATH"
+workspace_tools="$(dirname "$workspace_sdk")"
+if [[ -d "$workspace_tools/android-sdk" ]]; then
+  export ANDROID_HOME="$workspace_tools/android-sdk"
+fi
+export PUB_CACHE="${PUB_CACHE:-$workspace_tools/pub-cache}"
+export PUB_HOSTED_URL="${PUB_HOSTED_URL:-https://pub.flutter-io.cn}"
+export FLUTTER_STORAGE_BASE_URL="${FLUTTER_STORAGE_BASE_URL:-https://storage.flutter-io.cn}"
+if [[ "${1:-}" == "--format-dart" ]]; then
+  shift
+  exec "$sdk/bin/dart" format "$@"
+fi
+exec "$sdk/bin/flutter" "$@"

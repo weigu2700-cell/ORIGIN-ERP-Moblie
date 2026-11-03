@@ -1,1 +1,0 @@
-"use strict";const e=require("../../common/vendor.js"),n=e.defineComponent({__name:"index",setup:n=>(e.onMounted(()=>{e.index.switchTab({url:"/pages/workbench/index"})}),(e,n)=>({}))});wx.createPage(n);

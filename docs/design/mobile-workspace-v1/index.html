@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="data:," />
+  <title>原点智造 · 移动工作空间设计 V1</title>
+  <link rel="stylesheet" href="styles.css?v=20261103-2" />
+</head>
+<body>
+  <header class="review-header">
+    <a class="review-brand" href="#workspace"><span class="brand-symbol">原</span><span>原点智造<span class="review-divider">/</span><strong>移动工作空间</strong></span></a>
+    <div class="review-version"><span class="status-dot"></span>设计评审稿 V1 <span class="review-label">Android + iOS</span></div>
+  </header>
+  <main class="review-layout">
+    <aside class="review-nav" aria-label="设计页面">
+      <div class="nav-eyebrow">工作空间</div><div id="page-nav"></div>
+      <div class="nav-footer"><span class="small-dot"></span>交互设计原型<br><span>所有业务数据均为演示，未连接后端。</span></div>
+    </aside>
+    <section class="preview-area" aria-label="移动页面预览">
+      <div class="preview-toolbar">
+        <div><span id="screen-index" class="screen-index">01</span><strong id="screen-name">工作台</strong></div>
+        <div class="device-controls">
+          <label>视口<select id="device-size" aria-label="选择手机尺寸"><option value="390">390 × 844</option><option value="320">320 × 568</option><option value="430">430 × 932</option></select></label>
+          <button id="font-toggle" type="button" aria-pressed="false">Aa <span>大字体</span></button>
+        </div>
+      </div>
+      <div class="phone-stage"><div id="phone" class="phone" aria-label="手机设计预览"></div></div>
+      <div class="preview-caption"><span>可点击底部导航、待办、业务入口和页面操作</span><button id="reset-demo" type="button">重置演示</button></div>
+    </section>
+    <aside class="review-notes" aria-label="页面设计说明">
+      <div class="notes-eyebrow">页面职责</div><h1 id="note-title"></h1><p id="note-description"></p>
+      <div id="note-points"></div>
+      <div class="notes-section"><h2>场景与状态</h2><div class="state-options" id="state-options">
+        <button data-state="ready" class="selected">正常</button><button data-state="loading">加载</button><button data-state="empty">空状态</button><button data-state="offline">离线</button><button data-state="denied">无权限</button><button data-state="unknown">结果未知</button>
+      </div></div>
+      <div class="notes-section"><h2>可核对的设计原则</h2><ol><li>组织融入导航，不占业务内容区。</li><li>待办进入具体单据，动作与状态对应。</li><li>查询与执行分开，写操作明确确认。</li><li>AI 列表与详情是独立页面。</li></ol></div>
+      <a class="spec-link" href="design-spec.md">查看研究与设计交付说明 ↗</a>
+    </aside>
+  </main>
+  <script src="app.js?v=20261103-2"></script>
+</body>
+</html>
