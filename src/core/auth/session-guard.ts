@@ -12,7 +12,7 @@ export interface SessionGuardResult {
   runGuard: () => Promise<boolean>;
 }
 
-export function useSessionGuard(): SessionGuardResult {
+export function useSessionGuard(options: { allowUnavailable?: boolean } = {}): SessionGuardResult {
   const userStore = useUserStore();
   const guardStatus = ref<AsyncStatus>('idle');
 
@@ -25,6 +25,10 @@ export function useSessionGuard(): SessionGuardResult {
       return false;
     }
 
+    if (userStore.businessAvailable === false && !options.allowUnavailable) {
+      uni.switchTab({ url: '/pages/workbench/index' });
+      return false;
+    }
     if (userStore.isLoggedIn) {
       guardStatus.value = 'ready';
       return true;
@@ -38,6 +42,7 @@ export function useSessionGuard(): SessionGuardResult {
         uni.reLaunch({ url: '/pages/login/login' });
         return false;
       }
+      if (userStore.businessAvailable === false && !options.allowUnavailable) { uni.switchTab({ url: '/pages/workbench/index' }); return false; }
       guardStatus.value = 'ready';
       return true;
     } catch {

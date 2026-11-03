@@ -1,4 +1,5 @@
-import { computed, ref } from 'vue';
+import { captureSession, isSessionCurrent, onSessionChange } from '@/utils/auth';
+import { computed, ref, onScopeDispose } from 'vue';
 import { defineStore } from 'pinia';
 import { getEnabledWarehouses } from '@/api/master/warehouse';
 import { workbenchApi } from '@/api/workbench';
@@ -66,6 +67,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
   }
 
   async function loadWarehouses() {
+    const snapshot = captureSession();
     if (userStore.permissionsStatus === 'error') {
       warehouseStatus.value = 'error';
       return;
@@ -79,6 +81,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     warehouseStatus.value = 'loading';
     try {
       const page = await getEnabledWarehouses();
+      if (!isSessionCurrent(snapshot)) return;
       warehouses.value = page.records || [];
       const savedWarehouse = warehouses.value.find(
         (item) => String(item.id) === restoredWarehouseId.value,
@@ -94,7 +97,8 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         uni.removeStorageSync(STORAGE_KEYS.currentWarehouseId);
       }
       warehouseStatus.value = 'ready';
-    } catch (error) {
+    } catch {
+      if (!isSessionCurrent(snapshot)) return;
       warehouses.value = [];
       currentWarehouse.value = null;
       warehouseStatus.value = 'error';
@@ -106,6 +110,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
   }
 
   async function loadSummaryItem(key: SummaryKey) {
+    const snapshot = captureSession();
     const definitions = {
       purchaseInboundPending: {
         permission: PERMISSIONS.purchaseInboundList,
@@ -142,10 +147,13 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     summaryStatus.value[key] = 'loading';
     delete summaryErrors.value[key];
     try {
-      summary.value[key] = await definition.load();
+      const value = await definition.load();
+      if (!isSessionCurrent(snapshot)) return false;
+      summary.value[key] = value;
       summaryStatus.value[key] = 'ready';
       return true;
     } catch (error) {
+      if (!isSessionCurrent(snapshot)) return false;
       summaryStatus.value[key] = 'error';
       summaryErrors.value[key] = getErrorMessage(error);
       return false;
@@ -153,23 +161,35 @@ export const useWorkbenchStore = defineStore('workbench', () => {
   }
 
   async function loadSummary() {
+    if (userStore.businessAvailable === false) { reset(); return; }
+    const snapshot = captureSession();
     const results = await Promise.all(summaryKeys.map((key) => loadSummaryItem(key)));
-    if (results.some(Boolean)) lastSyncedAt.value = new Date();
+    if (isSessionCurrent(snapshot) && results.some(Boolean)) lastSyncedAt.value = new Date();
   }
 
   async function initialize() {
+    const snapshot = captureSession();
     loading.value = true;
     restoreWarehouse();
     try {
       const authenticated = await userStore.validateSession();
-      if (!authenticated) throw new Error('登录状态已失效');
+      if (!authenticated || !isSessionCurrent(snapshot)) return;
+      if (userStore.businessAvailable === false) { reset(); return; }
       await Promise.all([loadWarehouses(), loadSummary()]);
     } finally {
-      loading.value = false;
+      if (isSessionCurrent(snapshot)) loading.value = false;
     }
   }
 
+  function reset() {
+    loading.value = false; summary.value = emptySummary(); warehouses.value = []; currentWarehouse.value = null;
+    restoredWarehouseId.value = ''; warehouseStatus.value = 'idle'; summaryErrors.value = {}; lastSyncedAt.value = null;
+    for (const key of summaryKeys) summaryStatus.value[key] = 'idle';
+  }
+  onScopeDispose(onSessionChange(reset));
+
   return {
+    reset,
     loading,
     summary,
     warehouses,

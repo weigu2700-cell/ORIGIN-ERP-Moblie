@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import OrganizationSwitcher from '@/components/organization/OrganizationSwitcher.vue';
+import OrganizationUnavailable from '@/components/organization/OrganizationUnavailable.vue';
 import { computed, ref } from 'vue';
 import { onPullDownRefresh, onShow } from '@dcloudio/uni-app';
 import { useUserStore } from '@/stores/user';
@@ -190,7 +192,7 @@ onShow(async () => {
     uni.reLaunch({ url: '/pages/login/login' });
     return;
   }
-  if (!initialized.value) {
+  if (!initialized.value || workbenchStore.warehouseStatus === 'idle') {
     await loadWorkbench();
     return;
   }
@@ -216,6 +218,9 @@ onPullDownRefresh(async () => {
 <template>
   <wd-config-provider :theme-vars="{ colorTheme: '#245b78' }">
     <view class="workbench-page">
+      <OrganizationSwitcher />
+      <OrganizationUnavailable v-if="userStore.businessAvailable === false" />
+      <template v-else>
       <view class="top-panel">
         <view class="top-line">
           <view>
@@ -399,6 +404,7 @@ onPullDownRefresh(async () => {
         :actions="warehouseActions"
         @select="selectWarehouse"
       />
+      </template>
     </view>
   </wd-config-provider>
 </template>

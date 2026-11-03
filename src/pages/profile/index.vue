@@ -2,10 +2,11 @@
 import { ref } from 'vue';
 import { useUserStore } from '@/stores/user';
 import { useSessionGuard, bindPageGuard } from '@/core/auth';
+import OrganizationSwitcher from '@/components/organization/OrganizationSwitcher.vue';
 import { onShow } from '@dcloudio/uni-app';
 
 const userStore = useUserStore();
-const guard = useSessionGuard();
+const guard = useSessionGuard({ allowUnavailable: true });
 const errorMessage = ref('');
 
 bindPageGuard(guard);
@@ -38,6 +39,7 @@ onShow(() => {
 
 <template>
   <view class="profile-page">
+    <OrganizationSwitcher />
     <view v-if="guard.guardStatus.value === 'loading' && !userStore.profile" class="profile-state"
       >正在加载账号信息...</view
     >
@@ -58,7 +60,7 @@ onShow(() => {
           <view class="profile-copy">
             <text class="profile-name">{{ userStore.displayName }}</text>
             <text class="profile-role"
-              >{{ userStore.profile?.deptName || '未设置部门' }} · {{ userStore.primaryRole }}</text
+              >{{ userStore.businessAvailable ? (userStore.profile?.deptName || '未设置部门') : '当前组织' }} · {{ userStore.primaryRole }}</text
             >
           </view>
         </view>
@@ -68,7 +70,7 @@ onShow(() => {
           <text class="info-label">登录账号</text>
           <text class="info-value">{{ userStore.profile?.username || '暂无' }}</text>
         </view>
-        <view class="info-row">
+        <view v-if="userStore.businessAvailable" class="info-row">
           <text class="info-label">手机号码</text>
           <text class="info-value">{{ userStore.profile?.phone || '未设置' }}</text>
         </view>

@@ -1,6 +1,6 @@
 import { appConfig } from '@/config/env';
 import type { ApiResult, AppErrorDetails, AppErrorKind, RequestOptions } from '@/types/api';
-import { getToken, removeToken } from '@/utils/auth';
+import { getToken, removeToken, captureSession, isSessionCurrent, registerSessionAbort, SessionChangedError } from '@/utils/auth';
 
 export class AppError extends Error {
   readonly kind: AppErrorKind;
@@ -150,6 +150,7 @@ export function request<T>(options: RequestOptions): Promise<T> {
     return Promise.reject(configurationError);
   }
 
+  const snapshot = captureSession();
   const token = auth ? getToken() : '';
   const header: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -158,20 +159,25 @@ export function request<T>(options: RequestOptions): Promise<T> {
   if (token) header.Authorization = `Bearer ${token}`;
 
   return new Promise((resolve, reject) => {
-    uni.request({
+    let settled = false;
+    let release: () => void = () => {};
+    const task = uni.request({
       url: appendQuery(joinUrl(appConfig.apiBaseUrl, url), query),
       method,
       data: data as UniApp.RequestOptions['data'],
       header,
       timeout,
       success: (response: UniNamespace.RequestSuccessCallbackResult) => {
+        if (settled) return;
+        settled = true; release();
+        if (!isSessionCurrent(snapshot)) { reject(new SessionChangedError()); return; }
         const result = parseApiResult<T>(response.data);
         const responseCode = result?.code;
         const isUnauthorized =
           response.statusCode === UNAUTHORIZED_CODE || responseCode === UNAUTHORIZED_CODE;
         const requestId = getRequestId(response.header as Record<string, string> | undefined);
 
-        if (isUnauthorized) handleUnauthorized();
+        if (isUnauthorized && auth) handleUnauthorized();
 
         if (response.statusCode < 200 || response.statusCode >= 300) {
           const kind = getErrorKind(response.statusCode, responseCode);
@@ -221,11 +227,21 @@ export function request<T>(options: RequestOptions): Promise<T> {
         resolve(result.data);
       },
       fail: (failure: UniNamespace.GeneralCallbackResult) => {
+        if (settled) return;
+        settled = true; release();
+        if (!isSessionCurrent(snapshot)) { reject(new SessionChangedError()); return; }
         const error = createNetworkError(failure, isReadMethod(method));
         if (shouldShowError) showError(error.message);
         reject(error);
       },
     });
+    release = registerSessionAbort(() => {
+      if (settled) return;
+      settled = true; release();
+      reject(new SessionChangedError());
+      task?.abort?.();
+    });
+    if (settled) release();
   });
 }
 
