@@ -1,5 +1,5 @@
 import 'package:origin_mobile/core/api.dart';
-import 'package:origin_mobile/core/chat_mock.dart';
+import 'chat_mock.dart';
 import 'package:origin_mobile/core/chat_store.dart';
 import 'package:origin_mobile/core/session.dart';
 
@@ -213,5 +213,7 @@ Session authenticatedSession(FixtureApi api) => Session(api, MemoryVault())
   };
 
 /// 页面测试使用内存聊天，不连接 WebSocket。
-ChatStore testChat(Session session) =>
-    ChatStore(session, api: MockChatApi(delay: Duration.zero));
+ChatStore testChat(Session session) {
+  session.profile = {...session.profile, 'id': MockChatApi.me};
+  return ChatStore(session, api: MockChatApi(delay: Duration.zero));
+}

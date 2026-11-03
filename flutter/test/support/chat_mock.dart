@@ -3,12 +3,12 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
-import '../domain/chat.dart';
-import 'api.dart';
-import 'session.dart';
-import 'chat_api.dart';
+import 'package:origin_mobile/core/api.dart';
+import 'package:origin_mobile/core/chat_api.dart';
+import 'package:origin_mobile/core/session.dart';
+import 'package:origin_mobile/domain/chat.dart';
 
-/// 内存 Mock：后端聊天接口上线前联调界面（--dart-define=CHAT_MOCK=1）。
+/// 测试用内存聊天后端（仅测试使用，应用代码只走真实接口）。
 /// 行为贴近 api.md：幂等 clientMessageId、expectedVersion 冲突、解散只读、上传检查流程。
 class MockChatApi implements ChatApi {
   static const me = '80001';

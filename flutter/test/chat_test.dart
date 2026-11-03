@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:origin_mobile/core/api.dart';
-import 'package:origin_mobile/core/chat_mock.dart';
 import 'package:origin_mobile/core/chat_store.dart';
 import 'package:origin_mobile/domain/chat.dart';
 import 'package:origin_mobile/domain/chat_format.dart';
@@ -12,7 +11,7 @@ import 'support/fakes.dart';
 
 Future<ChatStore> loaded() async {
   final session = authenticatedSession(FixtureApi());
-  final chat = ChatStore(session, api: MockChatApi(delay: Duration.zero));
+  final chat = testChat(session);
   await chat.bootstrap();
   addTearDown(() {
     chat.dispose();

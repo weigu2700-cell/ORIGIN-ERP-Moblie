@@ -10,11 +10,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../domain/chat.dart';
 import 'api.dart';
 import 'chat_api.dart';
-import 'chat_mock.dart';
 import 'chat_socket.dart';
 import 'session.dart';
-
-const chatMock = bool.fromEnvironment('CHAT_MOCK');
 
 String _uuid() {
   final r = Random.secure();
@@ -48,8 +45,7 @@ String chatErrorText(Object error) {
 class ChatStore extends ChangeNotifier {
   final Session session;
   final ChatApi api;
-  ChatStore(this.session, {ChatApi? api})
-    : api = api ?? (chatMock ? MockChatApi() : HttpChatApi(session));
+  ChatStore(this.session, {ChatApi? api}) : api = api ?? HttpChatApi(session);
 
   final conversations = <String, Conversation>{};
   final timelines = <String, List<ChatMessage>>{};
@@ -72,8 +68,7 @@ class ChatStore extends ChangeNotifier {
   final _buffer = <String, ChatEvent>{};
   final _cancels = <String, CancelToken>{};
 
-  String get myId =>
-      chatMock ? MockChatApi.me : '${session.profile['id'] ?? ''}';
+  String get myId => '${session.profile['id'] ?? ''}';
   List<Conversation> get list =>
       conversations.values.toList()
         ..sort((a, b) => b.activity.compareTo(a.activity));
@@ -515,9 +510,7 @@ class ChatStore extends ChangeNotifier {
       var status = await api.uploadStatus(reservation.uploadId);
       for (final wait in const [2, 5, 10, 10, 10, 10]) {
         if (status.status != 'VERIFYING' && status.status != 'INITIATED') break;
-        await Future<void>.delayed(
-          Duration(milliseconds: chatMock ? 600 : wait * 1000),
-        );
+        await Future<void>.delayed(Duration(milliseconds: wait * 1000));
         if (cancel.isCancelled) return;
         status = await api.uploadStatus(reservation.uploadId);
       }

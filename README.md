@@ -189,13 +189,16 @@ cd flutter
 
 ### 员工聊天联调
 
-聊天接口（`/im/*`、`/ws/chat`）由后端聊天模块提供，设计见后端仓库 `docs/design/realtime-chat-v1`。后端聊天接口上线前，可用内存 Mock 联调界面（登录等其余功能仍连真实后端）：
+聊天走真实的 `/im/*` 与 `/ws/chat`，后端需要开启聊天模块（环境变量 `IM_ENABLED=true`；Web 端还需把页面地址写入 `IM_WEB_ORIGIN`，文件传输另需配置对象存储与扫描服务，见后端仓库 `docs/design/realtime-chat-v1/deployment.md`）。聊天开关未开时消息页会提示「聊天尚未开放」。
+
+对真实后端走完整聊天流程（会写入测试数据：建群、发消息、改名、解散）：
 
 ```bash
-./tool/flutterw run --dart-define=API_BASE_URL=http://localhost:8080 --dart-define=CHAT_MOCK=true
+cd flutter
+LIVE_URL=http://localhost:8080 LIVE_USER=<账号> LIVE_PASS=<密码> ./tool/flutterw test tool/live_chat.dart
 ```
 
-注意 `CHAT_MOCK` 必须写 `true`。Mock 数据含单聊、群聊、已解散的群、文件与图片，发送消息会收到自动回复；上传文件名含「受限」或 `.exe` 会被模拟拦截。
+自动化测试使用 `test/support/chat_mock.dart` 里的内存聊天后端，不连接网络。
 
 ### 开发与测试
 
