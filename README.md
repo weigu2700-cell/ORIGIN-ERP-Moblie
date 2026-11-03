@@ -5,15 +5,16 @@
   <p>
     <a href="#产品介绍">产品介绍</a> ·
     <a href="#功能一览">功能</a> ·
+    <a href="#界面展示">界面展示</a> ·
     <a href="#技术栈与架构">技术栈</a> ·
     <a href="#快速开始">快速开始</a> ·
     <a href="#项目状态">项目状态</a>
   </p>
 </div>
 
-![工作空间设计稿](docs/design/mobile-workspace-v1/exports/board-workspace.png)
+![原点智造移动端：工作台、生产订单与 AI 助手](docs/design/flutter-current/overview.png)
 
-> 上图为 V1 设计稿，仅用于说明布局方向；实际界面以应用运行效果为准。
+> 展示图由当前 Flutter 代码渲染，使用演示数据；用于展示现有界面，不代表生产环境数据或真机验收结果。
 
 ---
 
@@ -76,6 +77,44 @@
 
 ### 我的
 账号、角色、所属组织，以及切换组织与退出登录。
+
+---
+
+## 界面展示
+
+### 生产执行
+
+从订单列表查看状态与进度，进入详情核对物料、时间和关联作业，再登记报工草稿。
+
+![生产订单列表、订单详情与报工登记](docs/design/flutter-current/production.png)
+
+### 库存与扫码
+
+扫码或手工输入物料编码，按仓库查询库存，分别核对在库、预留和可用数量。
+
+![扫一扫、库存查询与库存详情](docs/design/flutter-current/inventory.png)
+
+### AI 业务助手
+
+从常用问题开始查询，在历史会话抽屉中切换对话，连续阅读业务回答。
+
+![AI 助手入口、历史会话与业务对话](docs/design/flutter-current/assistant.png)
+
+<details>
+<summary>展开查看工作空间、消息与应用目录</summary>
+
+![工作台、业务通知与全部应用](docs/design/flutter-current/workspace.png)
+
+</details>
+
+<details>
+<summary>展开查看组织登录、我的与消息入口</summary>
+
+![组织登录、账户资料与消息入口](docs/design/flutter-current/account.png)
+
+</details>
+
+[查看全部展板、单页高清图与生成方法](docs/design/flutter-current/README.md)。
 
 ---
 
