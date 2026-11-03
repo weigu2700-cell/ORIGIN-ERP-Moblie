@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/session.dart';
+import '../ui/brand.dart';
 import '../ui/common.dart';
 import '../ui/theme.dart';
 
@@ -86,157 +87,154 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     body: SafeArea(
+      top: false,
       child: AutofillGroup(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
             child: ListView(
-              padding: const EdgeInsets.all(28),
+              padding: EdgeInsets.zero,
               children: [
-                const SizedBox(height: 40),
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: CircleAvatar(
-                    radius: 26,
-                    backgroundColor: AppTokens.brand,
-                    child: Text(
-                      '原',
-                      style: TextStyle(color: Colors.white, fontSize: 24),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 28),
-                Text(
-                  '登录原点智造',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  '连接团队，专注现场作业',
-                  style: TextStyle(color: AppTokens.muted),
-                ),
-                const SizedBox(height: 32),
-                if (loading) const LinearProgressIndicator(),
-                Form(
-                  key: form,
+                const _LoginHero(),
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      GroupCard(
-                        margin: EdgeInsets.zero,
+                      if (loading) const LinearProgressIndicator(),
+                      Form(
+                        key: form,
                         child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            TextFormField(
-                              controller: tenant,
-                              readOnly:
-                                  configuration?['mode'] == 'single' || busy,
-                              decoration: InputDecoration(
-                                filled: false,
-                                contentPadding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  22,
-                                  16,
-                                  12,
-                                ),
-                                hintText: '组织编码',
-                                suffixText:
-                                    configuration?['organization']?['name']
-                                        ?.toString(),
+                            GroupCard(
+                              margin: EdgeInsets.zero,
+                              child: Column(
+                                children: [
+                                  TextFormField(
+                                    controller: tenant,
+                                    readOnly:
+                                        configuration?['mode'] == 'single' ||
+                                        busy,
+                                    decoration: InputDecoration(
+                                      filled: false,
+                                      contentPadding: const EdgeInsets.fromLTRB(
+                                        16,
+                                        22,
+                                        16,
+                                        12,
+                                      ),
+                                      hintText: '组织编码',
+                                      suffixText:
+                                          configuration?['organization']?['name']
+                                              ?.toString(),
+                                    ),
+                                    validator: (v) =>
+                                        v == null || v.trim().isEmpty
+                                        ? '请输入组织编码'
+                                        : null,
+                                  ),
+                                  const Divider(indent: 16),
+                                  TextFormField(
+                                    controller: username,
+                                    enabled: !busy,
+                                    autofillHints: const [
+                                      AutofillHints.username,
+                                    ],
+                                    decoration: const InputDecoration(
+                                      filled: false,
+                                      contentPadding: const EdgeInsets.fromLTRB(
+                                        16,
+                                        22,
+                                        16,
+                                        12,
+                                      ),
+                                      hintText: '账号',
+                                    ),
+                                    validator: (v) =>
+                                        v == null || v.trim().isEmpty
+                                        ? '请输入账号'
+                                        : null,
+                                  ),
+                                  const Divider(indent: 16),
+                                  TextFormField(
+                                    controller: password,
+                                    enabled: !busy,
+                                    obscureText: obscure,
+                                    autofillHints: const [
+                                      AutofillHints.password,
+                                    ],
+                                    decoration: InputDecoration(
+                                      filled: false,
+                                      contentPadding: const EdgeInsets.fromLTRB(
+                                        16,
+                                        22,
+                                        16,
+                                        12,
+                                      ),
+                                      hintText: '密码',
+                                      suffixIcon: IconButton(
+                                        tooltip: obscure ? '显示密码' : '隐藏密码',
+                                        onPressed: () =>
+                                            setState(() => obscure = !obscure),
+                                        icon: Icon(
+                                          obscure
+                                              ? Icons.visibility_outlined
+                                              : Icons.visibility_off_outlined,
+                                        ),
+                                      ),
+                                    ),
+                                    validator: (v) =>
+                                        v == null || v.isEmpty ? '请输入密码' : null,
+                                    onFieldSubmitted: (_) => submit(),
+                                  ),
+                                ],
                               ),
-                              validator: (v) => v == null || v.trim().isEmpty
-                                  ? '请输入组织编码'
-                                  : null,
                             ),
-                            const Divider(indent: 16),
-                            TextFormField(
-                              controller: username,
-                              enabled: !busy,
-                              autofillHints: const [AutofillHints.username],
-                              decoration: const InputDecoration(
-                                filled: false,
-                                contentPadding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  22,
-                                  16,
-                                  12,
+                            if (widget.session.error != null) ...[
+                              Text(
+                                widget.session.error!,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
                                 ),
-                                hintText: '账号',
                               ),
-                              validator: (v) => v == null || v.trim().isEmpty
-                                  ? '请输入账号'
-                                  : null,
-                            ),
-                            const Divider(indent: 16),
-                            TextFormField(
-                              controller: password,
-                              enabled: !busy,
-                              obscureText: obscure,
-                              autofillHints: const [AutofillHints.password],
-                              decoration: InputDecoration(
-                                filled: false,
-                                contentPadding: const EdgeInsets.fromLTRB(
-                                  16,
-                                  22,
-                                  16,
-                                  12,
+                              TextButton(
+                                onPressed: widget.session.logout,
+                                child: const Text('重试清除本机凭据'),
+                              ),
+                            ],
+                            if (error != null)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
                                 ),
-                                hintText: '密码',
-                                suffixIcon: IconButton(
-                                  tooltip: obscure ? '显示密码' : '隐藏密码',
-                                  onPressed: () =>
-                                      setState(() => obscure = !obscure),
-                                  icon: Icon(
-                                    obscure
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
+                                child: Semantics(
+                                  liveRegion: true,
+                                  child: Text(
+                                    error!,
+                                    style: TextStyle(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
+                                    ),
                                   ),
                                 ),
                               ),
-                              validator: (v) =>
-                                  v == null || v.isEmpty ? '请输入密码' : null,
-                              onFieldSubmitted: (_) => submit(),
+                            if (configuration == null && !loading)
+                              TextButton(
+                                onPressed: initialize,
+                                child: const Text('重新加载组织配置'),
+                              ),
+                            const SizedBox(height: 24),
+                            FilledButton(
+                              onPressed:
+                                  busy || loading || configuration == null
+                                  ? null
+                                  : submit,
+                              child: Text(busy ? '正在登录…' : '登录'),
                             ),
                           ],
                         ),
-                      ),
-                      if (widget.session.error != null) ...[
-                        Text(
-                          widget.session.error!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: widget.session.logout,
-                          child: const Text('重试清除本机凭据'),
-                        ),
-                      ],
-                      if (error != null)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          child: Semantics(
-                            liveRegion: true,
-                            child: Text(
-                              error!,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                            ),
-                          ),
-                        ),
-                      if (configuration == null && !loading)
-                        TextButton(
-                          onPressed: initialize,
-                          child: const Text('重新加载组织配置'),
-                        ),
-                      const SizedBox(height: 24),
-                      FilledButton(
-                        onPressed: busy || loading || configuration == null
-                            ? null
-                            : submit,
-                        child: Text(busy ? '正在登录…' : '登录'),
                       ),
                     ],
                   ),
@@ -246,6 +244,71 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
+    ),
+  );
+}
+
+class _LoginHero extends StatelessWidget {
+  const _LoginHero();
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 280 + MediaQuery.paddingOf(context).top,
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset('assets/images/login-bg.jpg', fit: BoxFit.cover),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xCC18384B), Color(0xF218384B)],
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            28,
+            MediaQuery.paddingOf(context).top + 24,
+            28,
+            24,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const OriginLogo(size: 52),
+              const SizedBox(height: 18),
+              const Text(
+                'ORIGIN ERP · 移动作业',
+                style: TextStyle(
+                  fontSize: 12,
+                  letterSpacing: 1.6,
+                  fontWeight: FontWeight.w700,
+                  color: AppTokens.accent,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                '原点智造',
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '连接团队，专注现场作业',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.white.withValues(alpha: 0.78),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     ),
   );
 }

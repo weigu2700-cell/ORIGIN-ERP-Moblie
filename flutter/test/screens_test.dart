@@ -39,7 +39,7 @@ void main() {
     await session.logout();
     await tester.pumpAndSettle();
     expect(find.text('精密轴承'), findsNothing);
-    expect(find.text('登录原点智造'), findsOneWidget);
+    expect(find.text('原点智造'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     session.dispose();
   });

@@ -2,11 +2,16 @@ import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 class AppTokens {
-  static const brand = Color(0xFF2C60E8),
-      ink = Color(0xFF1C2536),
-      muted = Color(0xFF536279),
-      canvas = Color(0xFFF2F3F7),
-      line = Color(0xFFE4E6EB);
+  // 与 Web 管理端同一套品牌色：深青蓝主色 + 琥珀强调色。
+  static const brand = Color(0xFF245B78),
+      brandDeep = Color(0xFF18384B),
+      brandMark = Color(0xFF203F54),
+      brandSoft = Color(0xFFE6F1F4),
+      accent = Color(0xFFD99A2B),
+      ink = Color(0xFF162631),
+      muted = Color(0xFF5E707B),
+      canvas = Color(0xFFEEF3F5),
+      line = Color(0xFFD7E2E7);
   static const page = 20.0, gap = 12.0, radius = 14.0;
   static ThemeData get theme => ThemeData(
     useMaterial3: true,
@@ -47,13 +52,13 @@ class AppTokens {
     dividerTheme: const DividerThemeData(color: line, space: 1),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: const Color(0xFFE9EBF0),
+      fillColor: const Color(0xFFE3EBEE),
       border: OutlineInputBorder(
         borderSide: BorderSide.none,
         borderRadius: BorderRadius.circular(radius),
       ),
       contentPadding: const EdgeInsets.all(16),
-      hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF8A94A6)),
+      hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF8798A2)),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(

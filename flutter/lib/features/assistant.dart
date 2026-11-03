@@ -172,7 +172,7 @@ class _AssistantPageState extends State<AssistantPage> {
                             ListTile(
                               dense: true,
                               selected: '${visible[i]['id']}' == activeId,
-                              selectedTileColor: const Color(0xFFEAF0FF),
+                              selectedTileColor: AppTokens.brandSoft,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),

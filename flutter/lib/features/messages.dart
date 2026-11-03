@@ -8,7 +8,7 @@ import '../ui/common.dart';
 import '../ui/theme.dart';
 import 'workspace.dart' show appColor, appIcon;
 
-const _notificationBlue = Color(0xFF3B82F6);
+const _notificationBlue = AppTokens.brand;
 
 /// 消息 Tab：会话列表。目前只有一个「系统通知」会话，后续可在此追加其他会话。
 class MessagesPage extends StatefulWidget {
@@ -131,7 +131,7 @@ class _ConversationTile extends StatelessWidget {
                 height: 52,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF5B9BFF), _notificationBlue],
+                    colors: [Color(0xFF3C7C9C), AppTokens.brandDeep],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -384,7 +384,7 @@ class _DayDivider extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
         decoration: BoxDecoration(
-          color: const Color(0xFFDFE2E9),
+          color: const Color(0xFFD9E3E8),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Text(

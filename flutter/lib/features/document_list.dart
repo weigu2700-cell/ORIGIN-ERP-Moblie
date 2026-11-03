@@ -257,7 +257,7 @@ class _DocumentListPageState extends State<DocumentListPage> {
                       child: Material(
                         color: warehouseId == null
                             ? Colors.white
-                            : const Color(0xFFEAF0FF),
+                            : AppTokens.brandSoft,
                         borderRadius: BorderRadius.circular(18),
                         child: InkWell(
                           borderRadius: BorderRadius.circular(18),

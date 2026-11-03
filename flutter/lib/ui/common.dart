@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/session.dart';
+import 'brand.dart';
 import 'theme.dart';
 
 class StateNotice extends StatelessWidget {
@@ -295,23 +296,7 @@ AppBar organizationBar(BuildContext context, Session session) => AppBar(
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 26,
-          height: 26,
-          decoration: BoxDecoration(
-            color: const Color(0xFF234658),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          alignment: Alignment.center,
-          child: const Text(
-            '原',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
+        const OriginLogo(size: 28),
         const SizedBox(width: 8),
         Flexible(
           child: Text(

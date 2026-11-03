@@ -27,11 +27,11 @@ String fmtNum(dynamic value) {
 enum Tone { neutral, info, warn, good, bad }
 
 Color toneColor(Tone tone) => switch (tone) {
-  Tone.neutral => const Color(0xFF6B7788),
+  Tone.neutral => const Color(0xFF6F7F89),
   Tone.info => AppTokens.brand,
-  Tone.warn => const Color(0xFFD98A1B),
-  Tone.good => const Color(0xFF1F9D6B),
-  Tone.bad => const Color(0xFFD64545),
+  Tone.warn => AppTokens.accent,
+  Tone.good => const Color(0xFF2A8C6A),
+  Tone.bad => const Color(0xFFC44F4F),
 };
 
 /// 按状态文案推断色调，避免每个单据各写一份映射。

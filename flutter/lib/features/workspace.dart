@@ -19,8 +19,8 @@ IconData appIcon(String key) => switch (key) {
   _ => Icons.local_shipping_outlined,
 };
 Color appColor(String key) => switch (key) {
-  'inventory' || 'picking' || 'warehousing' => const Color(0xFF219982),
-  'receiving' => const Color(0xFFB88323),
+  'inventory' || 'picking' || 'warehousing' => const Color(0xFF2A8C6A),
+  'receiving' => AppTokens.accent,
   'deliveries' => const Color(0xFF8B67C7),
   _ => AppTokens.brand,
 };
@@ -111,29 +111,19 @@ class _WorkspacePageState extends State<WorkspacePage> {
         onRefresh: load,
         child: ListView(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Text(
-                      '工作台',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                  ),
-                  Text(
-                    '${now.month}月${now.day}日 · 周${'一二三四五六日'[now.weekday - 1]}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppTokens.muted,
-                    ),
-                  ),
-                ],
-              ),
+            _WorkspaceHero(
+              date:
+                  '${now.year}年${now.month}月${now.day}日 周${'一二三四五六日'[now.weekday - 1]}',
+              stats: [
+                (label: '待处理业务', value: loading ? '—' : '$total'),
+                (
+                  label: '进行中的生产',
+                  value: loading ? '—' : '${production.length}',
+                ),
+              ],
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: TextField(
                 readOnly: true,
                 onTap: () => context.push('/workspace/apps'),
@@ -260,6 +250,98 @@ class _WorkspacePageState extends State<WorkspacePage> {
       ),
     );
   }
+}
+
+class _WorkspaceHero extends StatelessWidget {
+  final String date;
+  final List<({String label, String value})> stats;
+  const _WorkspaceHero({required this.date, required this.stats});
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.fromLTRB(16, 8, 16, 14),
+    padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(AppTokens.radius + 4),
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [AppTokens.brandDeep, AppTokens.brand],
+      ),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'ORIGIN ERP / 业务工作台',
+          style: TextStyle(
+            fontSize: 11,
+            letterSpacing: 1.4,
+            fontWeight: FontWeight.w700,
+            color: AppTokens.accent,
+          ),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          '今日业务概览',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          date,
+          style: TextStyle(
+            fontSize: 12.5,
+            color: Colors.white.withValues(alpha: 0.72),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            for (final stat in stats)
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.only(right: stat == stats.last ? 0 : 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.14),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        stat.value,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                      Text(
+                        stat.label,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.75),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    ),
+  );
 }
 
 class ApplicationGrid extends StatelessWidget {
@@ -568,7 +650,7 @@ class ProfilePage extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE4EAF6),
+                    color: AppTokens.brandSoft,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   alignment: Alignment.center,
